@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingTop="15sp">
+        
+    	<ImageView
+    	    android:id="@+id/avatar"
+    	    android:layout_width="wrap_content"
+    	    android:layout_height="wrap_content"
+    	    android:src="@drawable/user"
+    	    android:layout_alignParentLeft="true"/>
+    
+    	<LinearLayout
+    	    android:id="@+id/titleAndSpeakerName"
+    	    android:layout_width="wrap_content"
+    	    android:layout_height="wrap_content"
+    	    android:orientation="vertical"
+    	    android:layout_toRightOf="@id/avatar">
+			
+    	    <TextView
+				android:id="@+id/speakerName"
+				android:layout_width="wrap_content" 
+				android:layout_height="wrap_content" 
+				android:textSize="17sp"
+				android:text="Name"/>
+    	    
+    	    <TextView
+	 			android:id="@+id/presentationTitle"
+				android:layout_width="wrap_content" 
+				android:layout_height="wrap_content" 
+				android:textSize="15sp"
+				android:text="Titledfgherherthrthrthrthrthhhhhhhhhhhhhhhhhh"/>
+		
+		</LinearLayout>
+		
+			
+    	<TextView
+			android:id="@+id/duration"
+			android:layout_width="match_parent" 
+			android:layout_height="wrap_content" 
+			android:textSize="16sp"
+			android:layout_toRightOf="@id/titleAndSpeakerName"
+			android:layout_centerVertical="true"
+			android:visibility="invisible"
+			android:gravity="center"
+			android:text="1600"/>
+			
+    </RelativeLayout>    
+		
+
+    

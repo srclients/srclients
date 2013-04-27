@@ -1,0 +1,65 @@
+/**************************************
+ *
+ *  Publishing user info in Smart Space
+ *
+ **************************************/
+JNIEXPORT jint JNICALL Java_com_example_srclient_KP_publishPersonInfo
+  (JNIEnv *env, jobject obj, jstring name, jstring email, jstring phone) {
+
+	// Profile individual
+	individual_t *profile = sslog_new_individual(CLASS_PROFILE);
+
+	if(profile == NULL) {
+		__android_log_print(ANDROID_LOG_ERROR, "class KP", "Can't create profile individual");
+		return -1;
+	}
+
+	if(sslog_set_individual_uuid(profile, generateUuid("Profile")) != ERROR_NO) {
+		__android_log_print(ANDROID_LOG_ERROR, "class KP", "Can't set profile uuid");
+		return -1;
+	}
+
+	// Person individual
+	individual_t *person = sslog_new_individual(CLASS_PERSON);
+
+	if(person == NULL) {
+		__android_log_print(ANDROID_LOG_ERROR, "class KP", "Can't create person individual");
+		return -1;
+	}
+
+	if(sslog_set_individual_uuid(person, generateUuid("Person")) != ERROR_NO) {
+		__android_log_print(ANDROID_LOG_ERROR, "class KP", "Can't set person uuid");
+		return -1;
+	}
+
+	if(sslog_ss_add_property(person, PROPERTY_NAME,
+			(*env)->GetStringUTFChars(env, name, JNI_FALSE)) == -1) {
+		__android_log_print(ANDROID_LOG_ERROR, "class KP", "Can't add property name");
+		return -1;
+	}
+
+	if(sslog_ss_add_property(person, PROPERTY_MBOX,
+				(*env)->GetStringUTFChars(env, email, JNI_FALSE)) == -1) {
+			__android_log_print(ANDROID_LOG_ERROR, "class KP", "Can't add property mbox");
+			return -1;
+	}
+
+	if(sslog_ss_add_property(person, PROPERTY_PHONE,
+				(*env)->GetStringUTFChars(env, phone, JNI_FALSE)) == -1) {
+			__android_log_print(ANDROID_LOG_ERROR, "class KP", "Can't add property phone");
+			return -1;
+	}
+
+	if(sslog_ss_add_property(profile, PROPERTY_PERSONINFORMATION, person) == -1) {
+		__android_log_print(ANDROID_LOG_ERROR, "class KP", "Can't add property person");
+		return -1;
+	}
+
+	if(sslog_ss_insert_individual(profile) == -1) {
+		__android_log_print(ANDROID_LOG_ERROR, "class KP", "Can't insert individual to SS");
+		return -1;
+	}
+
+	return 0;
+}/* Publishing user info in Smart Space */
+

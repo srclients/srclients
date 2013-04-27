@@ -1,0 +1,82 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical" >
+
+    
+    <!-- Name field -->
+	<TextView
+        android:id="@+id/textName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:textSize="20sp"
+        android:layout_marginTop="75sp"
+        android:layout_marginLeft="15dp"
+        android:text="@string/participantName"/>
+    
+    <EditText
+        android:id="@+id/editName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@+id/textPassword"
+        android:layout_alignBaseline="@+id/textName"
+        android:layout_marginRight="15dp"
+        android:layout_marginLeft="15dp"
+        android:ems="10"
+        android:inputType="textPersonName" />
+	<!-- Name field -->
+	
+	
+	
+
+    <!-- Password field -->
+	<TextView
+        android:id="@+id/textPassword"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:textSize="20sp"
+        android:layout_marginTop="45dp"
+        android:layout_marginLeft="15dp"
+        android:layout_below="@+id/textName"
+        android:text="@string/participantPassword"/>
+    
+    <EditText
+        android:id="@+id/editPassword"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@+id/textPassword"
+        android:layout_alignBaseline="@+id/textPassword"
+        android:layout_marginRight="15dp"
+        android:layout_marginLeft="19dp"
+        android:ems="10"
+        android:inputType="textPassword" />
+    
+	<!-- Password field -->
+    
+    
+
+    <CheckBox
+        android:id="@+id/checkBoxAnonim"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/connectBtn"
+        android:layout_alignLeft="@+id/textPassword"
+        android:layout_marginBottom="25sp"
+        android:textSize="19sp"
+        android:text="@string/anonim" />
+    
+    
+    <Button
+        android:id="@+id/connectBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:text="@string/connectBtn"
+        android:textSize="17sp"
+        android:layout_marginBottom="25sp"/>
+
+</RelativeLayout>
