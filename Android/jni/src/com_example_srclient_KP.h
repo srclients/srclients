@@ -91,6 +91,14 @@ JNIEXPORT int JNICALL Java_com_example_srclient_KP_getServicesInfo
 JNIEXPORT int JNICALL Java_com_example_srclient_KP_userRegistration
   (JNIEnv *env, jobject obj, jstring, jstring);
 
+/*
+ * Class:     com_example_srclient_KP
+ * Method:    loadPresentation
+ * Signature: ()I
+ */
+JNIEXPORT int JNICALL Java_com_example_srclient_KP_loadPresentation
+  (JNIEnv *env, jobject obj, jstring, jobject);
+
 #ifdef __cplusplus
 }
 #endif

@@ -26,13 +26,6 @@ JNIEXPORT jint JNICALL Java_com_example_srclient_KP_connectSmartSpace
 		return -1;
 	}
 
-	jclass class = getJClassObject(env, "KP");
-
-	jfieldID uuidField = getFieldID(env, class, "uuid", "Ljava/lang/String;");
-
-	(*env)->SetIntField(env, obj, uuidField,
-			(*env)->NewStringUTF(env, uuid));
-
 	return 0;
 }/* Joining Smart Space */
 
@@ -128,29 +121,10 @@ int searchPerson(individual_t *person, char *userName, char *password) {
 
 /**************************************************
  *
- * Set status property to `active` and loads avatar
+ * Send to SS `newParticipantCome`
  *
  **************************************************/
 int activatePerson(individual_t *profile) {
-
-	/*prop_val_t *property = sslog_ss_get_property (profile, PROPERTY_PERSONINFORMATION);
-
-	if(property == NULL) {
-		__android_log_print(ANDROID_LOG_ERROR, "class KP", "Can't get person information property");
-		return -1;
-	}
-
-	individual_t *person = (individual_t *)property->prop_value;
-
-	sslog_ss_populate_individual(person);
-	if(person == NULL) {
-		__android_log_print(ANDROID_LOG_ERROR, "class KP", "Can't populate person individual");
-		return -1;
-	}*/
-
-	//sslog_ss_update_property(person, PROPERTY_STATUS->name, "offline", "online");
-
-	//sslog_ss_update_property(person, PROPERTY_IMG->name, "@drawable/ic_launcher", "@drawable/images");
 
 	individual_t *agendaGui = sslog_new_individual(CLASS_AGENDANOTIFICATION);
 
@@ -161,7 +135,6 @@ int activatePerson(individual_t *profile) {
 		return -1;
 	}
 
-
 	if(sslog_ss_insert_individual(agendaGui) != 0) {
 		__android_log_print(ANDROID_LOG_ERROR, "class KP", "insert failed");
 		return -1;
@@ -169,7 +142,7 @@ int activatePerson(individual_t *profile) {
 
 
 	return 0;
-}/* Set status property to `active` and loads avatar */
+}/* Send to SS `newParticipantCome` */
 
 
 /***************************************
@@ -257,7 +230,7 @@ void addTimeslotToJavaList(JNIEnv *env, individual_t *timeslot, jobject obj) {
 
 
 	/* Gets person link property */
-	char *imgLink = (char *) malloc (sizeof(char) * 1024);
+	char *imgLink = (char *) malloc (sizeof(char) * 200);
 
 	strcpy(imgLink, "http://upload.wikimedia.org/wikipedia/commons/3/36/Bonhomme_crystal_marron.png");
 
@@ -274,7 +247,6 @@ void addTimeslotToJavaList(JNIEnv *env, individual_t *timeslot, jobject obj) {
 		}
 	}
 
-	__android_log_print(ANDROID_LOG_ERROR, "class KP", imgLink);
 	/* Calling Agenda's addTimeslotItemToList Java method */
 	(*env)->CallVoidMethod(env, obj, methodId,
 			(*env)->NewStringUTF(env, (char *)(p_val_name->prop_value)),
@@ -289,7 +261,7 @@ void addTimeslotToJavaList(JNIEnv *env, individual_t *timeslot, jobject obj) {
 
 /*******************************************
  *
- * Loads participant's info from smart space
+ * TODO: Loads participant's info from smart space
  *
  *******************************************/
 int loadPersonInfo(void *property) {
@@ -440,3 +412,82 @@ jfieldID getFieldID(JNIEnv *env, jclass class, char *fieldName, char *signature)
 
 	return fieldID;
 }
+
+
+/***************************************************
+ *
+ * Initializes subscription to conference activities
+ *
+ ***************************************************/
+int initSubscription() {
+
+	subscription_t *subscription = sslog_new_subscription(true);
+
+	list_t *propertiesList = list_get_new_list();
+	list_add_data(PROPERTY_NEWPARTICIPANTCOME, propertiesList);
+
+	//sslog_sbcr_add_individual(subscription, );
+
+	return 0;
+}
+
+
+/********************************************************
+ *
+ * Loads presentation with `uuid` or current presentation
+ *
+ ********************************************************/
+JNIEXPORT int JNICALL Java_com_example_srclient_KP_loadPresentation
+  (JNIEnv *env, jobject obj, jstring stringUuid, jobject projectorClassObject) {
+
+	const char *uuid = (*env) -> GetStringUTFChars(env, stringUuid, NULL);
+	char *slideImg = (char *) malloc (sizeof(char) * 200);
+	individual_t *projectorService;
+
+	jclass class = getJClassObject(env, "Projector");
+
+	jmethodID methodId = (*env)->GetMethodID(env, class, "setImageLink",
+				"(Ljava/lang/String;)V");
+
+	if(methodId == 0)
+		__android_log_print(ANDROID_LOG_ERROR, "class KP", "methodId is NULL");
+
+
+	/* load current presentation */
+	if(strcmp(uuid, "") == 0) {
+		list_t* projectorServiceList = sslog_ss_get_individual_by_class_all(CLASS_PROJECTORSERVICE);
+
+			if(projectorServiceList != NULL) {
+				list_head_t* pos = NULL;
+				list_for_each(pos, &projectorServiceList->links) {
+					list_t* node = list_entry(pos, list_t, links);
+					projectorService = (individual_t*)(node->data);
+					sslog_ss_populate_individual(projectorService);
+					break;
+				}
+
+				// TODO: slideImg empty !!!
+				prop_val_t *p_val_slideImg = sslog_ss_get_property (projectorService,
+						PROPERTY_CURRENTSLIDEIMG);
+				if(p_val_slideImg != NULL) {
+					strcpy(slideImg, (char *)p_val_slideImg->prop_value);
+				} else {
+					__android_log_print(ANDROID_LOG_ERROR, "class KP", "slide image empty");
+				}
+			}
+	} else {
+		/* load presentation by `uuid` */
+		// TODO
+	}
+
+
+	(*env)->CallVoidMethod(env, projectorClassObject, methodId,
+			(*env)->NewStringUTF(env, slideImg));
+
+
+	free(slideImg);
+
+	return 0;
+}/* Loads presentation with `uuid` */
+
+

@@ -19,22 +19,26 @@ public class Agenda extends ListActivity {
 
 	private static final int IDM_SERVICES = 100;
 	private static final int IDM_SETTINGS = 101;
+	
 	private ArrayList<TimeslotItem> list;
 	private ListAdapter adapter;
 	Drawable imgDefault;
 	String absentImg = "http://upload.wikimedia.org/wikipedia/commons/3/36/Bonhomme_crystal_marron.png";
 	int connectionState = 0;
 	
-	public Agenda() {		
+	public Agenda() throws InterruptedException {		
 		ArrayList<TimeslotItem> list_tmp = new ArrayList<TimeslotItem>();
 		
 		list = new ArrayList<TimeslotItem>();
 		
-		new Thread() {
+		Thread t = new Thread() {
 			public void run() {
 				imgDefault = loadImage(absentImg);				
 			};
-		}.start();
+		};
+		
+		t.start();
+		t.join();
 		
 		
 		if(connectionState == 0) {

@@ -25,11 +25,12 @@ public class KP extends Activity
 	/*
 	 * 	Native functions prototypes
 	 */
-	public native int connectSmartSpace(String hostname, String ip,  int port);
+	public static native int connectSmartSpace(String hostname, String ip,  int port);
 	public static native int loadTimeslotList(Agenda obj);
-	public native void disconnectSmartSpace();
+	public static native void disconnectSmartSpace();
 	public static native int getServicesInfo(ServicesMenu menu);
-	public native int  userRegistration(String userName, String password);
+	public static native int  userRegistration(String userName, String password);
+	public static native int loadPresentation(String presentationUuid, Projector projector);
 	
 	
 	static {
@@ -80,7 +81,7 @@ public class KP extends Activity
 					// 172.21.0.181 - it-guest
 					// 192.168.0.1 - hostapd
 					// 192.168.112.109 - smart room SIB
-					if(connectSmartSpace("X", "192.168.0.1", 10010) != 0) {
+					if(connectSmartSpace("X", "10.0.2.2", 10010) != 0) {
 						Toast.makeText(this, "Connection failed", Toast.LENGTH_SHORT).show();
 						return;
 					} else
