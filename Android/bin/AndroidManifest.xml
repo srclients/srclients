@@ -35,6 +35,11 @@
          <activity android:name="com.example.srclient.ServicesMenu"
              android:launchMode="singleTask"
              android:label="@string/avail_services"></activity>
+         
+         <activity android:name="com.example.srclient.Projector"
+            android:launchMode="singleTask"
+            android:label="@string/projector"
+            android:screenOrientation="landscape"></activity>
     </application>
 
 </manifest>

@@ -56,8 +56,8 @@ public class ServicesMenu extends ListActivity {
 			intent.setClass(this, Agenda.class);
 			startActivity(intent);
 		} else if(serviceName.contains("Projector")) {
-			//intent.setClass(this, Projector.class);
-			//startActivity(intent);
+			intent.setClass(this, Projector.class);
+			startActivity(intent);
 		}
 		
 	}
