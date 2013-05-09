@@ -17,5 +17,7 @@
     <string name="projector_descr">Show and control presentations</string>
     <string name="avail_services">Services</string>
     <string name="anonim">Sign as a spectator</string>
+    <string name="startConference">Start conference</string>
+    <string name="endConference">End conference</string>
 
 </resources>

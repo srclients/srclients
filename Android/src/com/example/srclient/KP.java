@@ -11,26 +11,96 @@ import java.util.ArrayList;
 import android.widget.EditText;
 import android.widget.CheckBox;
 
+// TODO: Auto-generated Javadoc
+/**
+ * The Class KP.
+ */
 public class KP extends Activity 
 	implements View.OnClickListener {
 	
+	/** The connect btn. */
 	Button connectBtn;
+	
+	/** The edit name. */
 	EditText editName;
+	
+	/** The edit password. */
 	EditText editPassword;
+	
+	/** The ch box anonim. */
 	CheckBox chBoxAnonim;
+	
+	/** The connection state. */
 	static int connectionState;
+	
+	static boolean isChairman;
+	
+	/** The timeslot list. */
 	ArrayList<String> timeslotList;
+	
+	/** The uuid. */
 	String uuid;
 	
 	/*
 	 * 	Native functions prototypes
 	 */
+	/**
+	 * Connect smart space.
+	 *
+	 * @param hostname the hostname
+	 * @param ip the ip
+	 * @param port the port
+	 * @return the int
+	 */
 	public static native int connectSmartSpace(String hostname, String ip,  int port);
+	
+	/**
+	 * Load timeslot list.
+	 *
+	 * @param obj the obj
+	 * @return the int
+	 */
 	public static native int loadTimeslotList(Agenda obj);
+	
+	/**
+	 * Disconnect smart space.
+	 */
 	public static native void disconnectSmartSpace();
+	
+	/**
+	 * Gets the services info.
+	 *
+	 * @param menu the menu
+	 * @return the services info
+	 */
 	public static native int getServicesInfo(ServicesMenu menu);
+	
+	/**
+	 * User registration.
+	 *
+	 * @param userName the user name
+	 * @param password the password
+	 * @return the int
+	 */
 	public static native int  userRegistration(String userName, String password);
+	
+	/**
+	 * Load presentation.
+	 *
+	 * @param presentationUuid the presentation uuid
+	 * @param projector the projector
+	 * @return the int
+	 */
 	public static native int loadPresentation(String presentationUuid, Projector projector);
+	
+	/**
+	 * Inits the subscription.
+	 *
+	 * @return the int
+	 */
+	public native int initSubscription();
+	public static native int startConference();
+	public static native int endConference();
 	
 	
 	static {
@@ -38,8 +108,14 @@ public class KP extends Activity
 	}
 	
 	
+	/**
+	 * Instantiates a new kp.
+	 */
 	public KP() {}
 	
+	/* (non-Javadoc)
+	 * @see android.app.Activity#onCreate(android.os.Bundle)
+	 */
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
         setContentView(R.layout.kp_interface);
@@ -55,9 +131,14 @@ public class KP extends Activity
         
         editName.setText("vdovenko");
         editPassword.setText("vdovenko");
+        
+        isChairman = false;
 	}
 	
-	/* Push button handler */
+	
+	/* (non-Javadoc)
+	 * @see android.view.View.OnClickListener#onClick(android.view.View)
+	 */
 	public void onClick(View view) {
 		
 		String name = editName.getText().toString();
@@ -84,14 +165,18 @@ public class KP extends Activity
 					if(connectSmartSpace("X", "10.0.2.2", 10010) != 0) {
 						Toast.makeText(this, "Connection failed", Toast.LENGTH_SHORT).show();
 						return;
-					} else
-						connectionState = 1;
+					}
+					
+					if(initSubscription() != 0)
+						Log.e("Java KP", "Init subscription failed");
 					
 					if(!chBoxAnonim.isChecked()) {
-						if(userRegistration(name, password) == 0)
+						if(userRegistration(name, password) == 0) {
 							Log.i("Java KP", "Registration successful");
-						
-						else {
+							connectionState = 1;
+							if(name.equals("vdovenko") && password.equals("vdovenko"))
+								isChairman = true;
+						} else {
 							Toast.makeText(this, "Registration failed", Toast.LENGTH_SHORT).show();
 							return;
 						}

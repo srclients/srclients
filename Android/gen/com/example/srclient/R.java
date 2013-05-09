@@ -70,6 +70,7 @@ public final class R {
         public static final int app_name=0x7f060000;
         public static final int avail_services=0x7f06000e;
         public static final int connectBtn=0x7f060007;
+        public static final int endConference=0x7f060011;
         public static final int menu_services=0x7f060008;
         public static final int menu_settings=0x7f060009;
         public static final int participantEmail=0x7f060004;
@@ -79,6 +80,7 @@ public final class R {
         public static final int projector=0x7f06000c;
         public static final int projector_descr=0x7f06000d;
         public static final int sr_client=0x7f060002;
+        public static final int startConference=0x7f060010;
     }
     public static final class style {
         /** 

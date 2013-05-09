@@ -7,47 +7,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-#undef com_example_srclient_KP_MODE_PRIVATE
-#define com_example_srclient_KP_MODE_PRIVATE 0L
-#undef com_example_srclient_KP_MODE_WORLD_READABLE
-#define com_example_srclient_KP_MODE_WORLD_READABLE 1L
-#undef com_example_srclient_KP_MODE_WORLD_WRITEABLE
-#define com_example_srclient_KP_MODE_WORLD_WRITEABLE 2L
-#undef com_example_srclient_KP_MODE_APPEND
-#define com_example_srclient_KP_MODE_APPEND 32768L
-#undef com_example_srclient_KP_BIND_AUTO_CREATE
-#define com_example_srclient_KP_BIND_AUTO_CREATE 1L
-#undef com_example_srclient_KP_BIND_DEBUG_UNBIND
-#define com_example_srclient_KP_BIND_DEBUG_UNBIND 2L
-#undef com_example_srclient_KP_BIND_NOT_FOREGROUND
-#define com_example_srclient_KP_BIND_NOT_FOREGROUND 4L
-#undef com_example_srclient_KP_CONTEXT_INCLUDE_CODE
-#define com_example_srclient_KP_CONTEXT_INCLUDE_CODE 1L
-#undef com_example_srclient_KP_CONTEXT_IGNORE_SECURITY
-#define com_example_srclient_KP_CONTEXT_IGNORE_SECURITY 2L
-#undef com_example_srclient_KP_CONTEXT_RESTRICTED
-#define com_example_srclient_KP_CONTEXT_RESTRICTED 4L
-#undef com_example_srclient_KP_RESULT_CANCELED
-#define com_example_srclient_KP_RESULT_CANCELED 0L
-#undef com_example_srclient_KP_RESULT_OK
-#define com_example_srclient_KP_RESULT_OK -1L
-#undef com_example_srclient_KP_RESULT_FIRST_USER
-#define com_example_srclient_KP_RESULT_FIRST_USER 1L
-#undef com_example_srclient_KP_DEFAULT_KEYS_DISABLE
-#define com_example_srclient_KP_DEFAULT_KEYS_DISABLE 0L
-#undef com_example_srclient_KP_DEFAULT_KEYS_DIALER
-#define com_example_srclient_KP_DEFAULT_KEYS_DIALER 1L
-#undef com_example_srclient_KP_DEFAULT_KEYS_SHORTCUT
-#define com_example_srclient_KP_DEFAULT_KEYS_SHORTCUT 2L
-#undef com_example_srclient_KP_DEFAULT_KEYS_SEARCH_LOCAL
-#define com_example_srclient_KP_DEFAULT_KEYS_SEARCH_LOCAL 3L
-#undef com_example_srclient_KP_DEFAULT_KEYS_SEARCH_GLOBAL
-#define com_example_srclient_KP_DEFAULT_KEYS_SEARCH_GLOBAL 4L
-/*
- * Class:     com_example_srclient_KP
- * Method:    connectSmartSpace
- * Signature: (Ljava/lang/String;Ljava/lang/String;I)I
- */
+
 JNIEXPORT jint JNICALL Java_com_example_srclient_KP_connectSmartSpace
   (JNIEnv *, jobject, jstring, jstring, jint);
 
@@ -89,7 +49,7 @@ JNIEXPORT int JNICALL Java_com_example_srclient_KP_getServicesInfo
  * Signature: ()I
  */
 JNIEXPORT int JNICALL Java_com_example_srclient_KP_userRegistration
-  (JNIEnv *env, jobject obj, jstring, jstring);
+  (JNIEnv *, jobject, jstring, jstring);
 
 /*
  * Class:     com_example_srclient_KP
@@ -97,7 +57,31 @@ JNIEXPORT int JNICALL Java_com_example_srclient_KP_userRegistration
  * Signature: ()I
  */
 JNIEXPORT int JNICALL Java_com_example_srclient_KP_loadPresentation
-  (JNIEnv *env, jobject obj, jstring, jobject);
+  (JNIEnv *, jobject, jstring, jobject);
+
+/*
+ * Class:     com_example_srclient_KP
+ * Method:    startConference
+ * Signature: ()I
+ */
+JNIEXPORT int JNICALL Java_com_example_srclient_KP_startConference
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     com_example_srclient_KP
+ * Method:    initSubscription
+ * Signature: ()I
+ */
+JNIEXPORT int JNICALL Java_com_example_srclient_KP_initSubscription
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     com_example_srclient_KP
+ * Method:    endConference
+ * Signature: ()I
+ */
+JNIEXPORT int JNICALL Java_com_example_srclient_KP_endConference
+  (JNIEnv *, jobject);
 
 #ifdef __cplusplus
 }

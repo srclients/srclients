@@ -1,3 +1,6 @@
+/*
+ * 
+ */
 package com.example.srclient;
 
 import java.util.ArrayList;
@@ -10,13 +13,24 @@ import android.widget.SimpleAdapter;
 import android.widget.ListView;
 import android.view.View;
 
+// TODO: Auto-generated Javadoc
+/**
+ * The Class ServicesMenu.
+ */
 public class ServicesMenu extends ListActivity {
 
+	/** The agenda service state. */
 	public int agendaServiceState;
+	
+	/** The projector service state. */
 	public int projectorServiceState;
 	
+	/** The list. */
 	private ArrayList<ServicesMenuItem> list;
 	
+	/**
+	 * Instantiates a new services menu.
+	 */
 	public ServicesMenu() {
 		if(KP.getServicesInfo(this) == -1) {
 			Log.e("servicesClass", "Faild to init services");
@@ -26,6 +40,9 @@ public class ServicesMenu extends ListActivity {
 		list = new ArrayList<ServicesMenuItem>();
 	}
 	
+	/* (non-Javadoc)
+	 * @see android.app.Activity#onCreate(android.os.Bundle)
+	 */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -47,6 +64,9 @@ public class ServicesMenu extends ListActivity {
         setListAdapter(adapter);
 	}
 	
+	/* (non-Javadoc)
+	 * @see android.app.ListActivity#onListItemClick(android.widget.ListView, android.view.View, int, long)
+	 */
 	@Override
 	protected void onListItemClick(ListView l, View v, int position, long id) {
 		Intent intent = new Intent();

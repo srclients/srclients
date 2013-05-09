@@ -2,6 +2,7 @@ package com.example.srclient;
 
 import android.app.ListActivity;
 import android.os.Bundle;
+import android.widget.Button;
 import android.widget.ListAdapter;
 import android.widget.SimpleAdapter;
 import java.util.ArrayList;
@@ -15,21 +16,41 @@ import android.graphics.drawable.Drawable;
 import java.lang.Thread;
 
 
+// TODO: Auto-generated Javadoc
+/**
+ * The Class Agenda.
+ */
 public class Agenda extends ListActivity {
 
-	private static final int IDM_SERVICES = 100;
+	private static final int IDM_SERVICES = 100;	
 	private static final int IDM_SETTINGS = 101;
+	private static final int IDM_STARTCONFERENCE = 102;
+	private static final int IDM_ENDCONFERENCE = 103;
 	
-	private ArrayList<TimeslotItem> list;
+	/** The list. */
+	private ArrayList<Timeslot> list;
+	
+	/** The adapter. */
 	private ListAdapter adapter;
+	
+	/** The img default. */
 	Drawable imgDefault;
+	
+	/** The absent img. */
 	String absentImg = "http://upload.wikimedia.org/wikipedia/commons/3/36/Bonhomme_crystal_marron.png";
+	
+	/** The connection state. */
 	int connectionState = 0;
 	
+	/**
+	 * Instantiates a new agenda.
+	 *
+	 * @throws InterruptedException the interrupted exception
+	 */
 	public Agenda() throws InterruptedException {		
-		ArrayList<TimeslotItem> list_tmp = new ArrayList<TimeslotItem>();
+		ArrayList<Timeslot> list_tmp = new ArrayList<Timeslot>();
 		
-		list = new ArrayList<TimeslotItem>();
+		list = new ArrayList<Timeslot>();
 		
 		Thread t = new Thread() {
 			public void run() {
@@ -48,12 +69,12 @@ public class Agenda extends ListActivity {
 				finish();
 			}
 			
-			list_tmp = (ArrayList<TimeslotItem>)list.clone();
+			list_tmp = (ArrayList<Timeslot>)list.clone();
 			list.clear();
 			
 			/* Reverse timeslot list */
 			for(int i = list_tmp.size() - 1; i >= 0; i--) {
-				list.add(new TimeslotItem(list_tmp.get(i)));
+				list.add(new Timeslot(list_tmp.get(i)));
 			}
 		}
 		
@@ -61,14 +82,17 @@ public class Agenda extends ListActivity {
 		connectionState = 1;
 	}
 	
+	/* (non-Javadoc)
+	 * @see android.app.Activity#onCreate(android.os.Bundle)
+	 */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
         
 		adapter = new SimpleAdapter(
         		this, list, R.layout.agenda_interface, 
-        		new String[] {TimeslotItem.NAME, TimeslotItem.TITLE, 
-        				TimeslotItem.DURATION, TimeslotItem.IMG}, 
+        		new String[] {Timeslot.NAME, Timeslot.TITLE, 
+        				Timeslot.DURATION, Timeslot.IMG}, 
         		new int[] {R.id.speakerName, R.id.presentationTitle, 
         				R.id.duration, R.id.avatar});
 
@@ -77,7 +101,15 @@ public class Agenda extends ListActivity {
 	}
 	
 	/* Addition timeslot item to timeslot Java list */
-	 synchronized public void addTimeslotItemToList(final String name, final String duration, 
+	 /**
+	 * Adds the timeslot item to list.
+	 *
+	 * @param name the name
+	 * @param duration the duration
+	 * @param title the title
+	 * @param img the img
+	 */
+	synchronized public void addTimeslotItemToList(final String name, final String duration, 
 			 final String title, final String img) {
 		
 		if(!img.equals(absentImg)) {
@@ -87,19 +119,25 @@ public class Agenda extends ListActivity {
 					public void run() {
 						synchronized(list) {
 							Drawable imgAvatar = loadImage(img);
-							list.add(new TimeslotItem(name, duration, title, imgAvatar));
+							list.add(new Timeslot(name, duration, title, imgAvatar));
 						}
 					}
 				}.start();
 			
 		} else
 			synchronized(list) {
-				list.add(new TimeslotItem(name, duration, title, imgDefault));
+				list.add(new Timeslot(name, duration, title, imgDefault));
 			}	
 	}
 	
 	
 	/* Loads image by url */
+	/**
+	 * Load image.
+	 *
+	 * @param link the link
+	 * @return the drawable
+	 */
 	synchronized public Drawable loadImage(String link) {
 		Drawable imgDrawable = null;
 
@@ -120,14 +158,25 @@ public class Agenda extends ListActivity {
 	}
 	
 	
+	/* (non-Javadoc)
+	 * @see android.app.Activity#onCreateOptionsMenu(android.view.Menu)
+	 */
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		menu.add(Menu.NONE, IDM_SERVICES, Menu.NONE, R.string.menu_services);
 		menu.add(Menu.NONE, IDM_SETTINGS, Menu.NONE, R.string.menu_settings);
 		
+		if(KP.isChairman) {
+			menu.add(Menu.NONE, IDM_STARTCONFERENCE, Menu.NONE, R.string.startConference);
+			menu.add(Menu.NONE, IDM_ENDCONFERENCE, Menu.NONE, R.string.endConference);
+		}
+		
 		return super.onCreateOptionsMenu(menu);
 	}
 	
+	/* (non-Javadoc)
+	 * @see android.app.Activity#onOptionsItemSelected(android.view.MenuItem)
+	 */
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		
@@ -140,6 +189,14 @@ public class Agenda extends ListActivity {
 				break;
 			
 			case IDM_SETTINGS:
+				break;
+				
+			case IDM_STARTCONFERENCE:
+				KP.startConference();
+				break;
+				
+			case IDM_ENDCONFERENCE:
+				KP.endConference();
 				break;
 		}
 		
