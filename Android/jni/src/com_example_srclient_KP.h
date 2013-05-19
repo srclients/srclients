@@ -40,7 +40,7 @@ JNIEXPORT jint JNICALL Java_com_example_srclient_KP_publishPersonInfo
  * Method:    getServicesInfo
  * Signature: ()[C
  */
-JNIEXPORT int JNICALL Java_com_example_srclient_KP_getServicesInfo
+JNIEXPORT jint JNICALL Java_com_example_srclient_KP_getServicesInfo
   (JNIEnv *, jclass, jobject);
 
 /*
@@ -48,7 +48,7 @@ JNIEXPORT int JNICALL Java_com_example_srclient_KP_getServicesInfo
  * Method:    userRegistartion
  * Signature: ()I
  */
-JNIEXPORT int JNICALL Java_com_example_srclient_KP_userRegistration
+JNIEXPORT jint JNICALL Java_com_example_srclient_KP_userRegistration
   (JNIEnv *, jobject, jstring, jstring);
 
 /*
@@ -56,7 +56,7 @@ JNIEXPORT int JNICALL Java_com_example_srclient_KP_userRegistration
  * Method:    loadPresentation
  * Signature: ()I
  */
-JNIEXPORT int JNICALL Java_com_example_srclient_KP_loadPresentation
+JNIEXPORT jint JNICALL Java_com_example_srclient_KP_loadPresentation
   (JNIEnv *, jobject, jstring, jobject);
 
 /*
@@ -64,7 +64,7 @@ JNIEXPORT int JNICALL Java_com_example_srclient_KP_loadPresentation
  * Method:    startConference
  * Signature: ()I
  */
-JNIEXPORT int JNICALL Java_com_example_srclient_KP_startConference
+JNIEXPORT jint JNICALL Java_com_example_srclient_KP_startConference
   (JNIEnv *, jobject);
 
 /*
@@ -72,7 +72,7 @@ JNIEXPORT int JNICALL Java_com_example_srclient_KP_startConference
  * Method:    initSubscription
  * Signature: ()I
  */
-JNIEXPORT int JNICALL Java_com_example_srclient_KP_initSubscription
+JNIEXPORT jint JNICALL Java_com_example_srclient_KP_initSubscription
   (JNIEnv *, jobject);
 
 /*
@@ -80,7 +80,7 @@ JNIEXPORT int JNICALL Java_com_example_srclient_KP_initSubscription
  * Method:    endConference
  * Signature: ()I
  */
-JNIEXPORT int JNICALL Java_com_example_srclient_KP_endConference
+JNIEXPORT jint JNICALL Java_com_example_srclient_KP_endConference
   (JNIEnv *, jobject);
 
 #ifdef __cplusplus

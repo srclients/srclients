@@ -2,7 +2,6 @@ package com.example.srclient;
 
 import android.app.ListActivity;
 import android.os.Bundle;
-import android.widget.Button;
 import android.widget.ListAdapter;
 import android.widget.SimpleAdapter;
 import java.util.ArrayList;
@@ -32,6 +31,8 @@ public class Agenda extends ListActivity {
 	
 	/** The adapter. */
 	private ListAdapter adapter;
+	
+	Agenda thisObject = this;
 	
 	/** The img default. */
 	Drawable imgDefault;
@@ -97,10 +98,10 @@ public class Agenda extends ListActivity {
         				R.id.duration, R.id.avatar});
 
 		((SimpleAdapter) adapter).setViewBinder(new AgendaViewBinder());
-        setListAdapter(adapter);
+		setListAdapter(adapter);
 	}
 	
-	/* Addition timeslot item to timeslot Java list */
+	
 	 /**
 	 * Adds the timeslot item to list.
 	 *
@@ -108,21 +109,24 @@ public class Agenda extends ListActivity {
 	 * @param duration the duration
 	 * @param title the title
 	 * @param img the img
+	 * @throws InterruptedException 
 	 */
-	synchronized public void addTimeslotItemToList(final String name, final String duration, 
-			 final String title, final String img) {
+	public void addTimeslotItemToList(final String name, final String duration, 
+			 final String title, final String img) throws InterruptedException {
 		
 		if(!img.equals(absentImg)) {
 			
-				new Thread() {
+			Thread t = new Thread() {
 					@Override
 					public void run() {
 						synchronized(list) {
 							Drawable imgAvatar = loadImage(img);
 							list.add(new Timeslot(name, duration, title, imgAvatar));
 						}
-					}
-				}.start();
+					};
+			};
+			t.start();
+			t.join();
 			
 		} else
 			synchronized(list) {
@@ -201,6 +205,13 @@ public class Agenda extends ListActivity {
 		}
 		
 		return super.onOptionsItemSelected(item);
+	}
+	
+	public void updateAgenda() {
+		if(list != null)
+			list.clear();
+		//KP.loadTimeslotList(this);
+		this.recreate();
 	}
 	
 }

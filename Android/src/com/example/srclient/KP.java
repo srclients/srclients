@@ -10,6 +10,7 @@ import android.content.Intent;
 import java.util.ArrayList;
 import android.widget.EditText;
 import android.widget.CheckBox;
+import android.view.KeyEvent;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -160,9 +161,8 @@ public class KP extends Activity
 					
 					// 10.0.2.2 - local; 
 					// 172.21.0.181 - it-guest
-					// 192.168.0.1 - hostapd
 					// 192.168.112.109 - smart room SIB
-					if(connectSmartSpace("X", "10.0.2.2", 10010) != 0) {
+					if(connectSmartSpace("X", "192.168.0.20", 10010) != 0) {
 						Toast.makeText(this, "Connection failed", Toast.LENGTH_SHORT).show();
 						return;
 					}
@@ -187,5 +187,14 @@ public class KP extends Activity
 				startActivity(intent);
 				break;
 		}
+	}
+	
+	@Override
+	public boolean onKeyDown(int keyCode, KeyEvent event)  {
+	    if (keyCode == KeyEvent.KEYCODE_BACK) {
+	    	KP.disconnectSmartSpace();
+	    	connectionState = -1;
+	    }
+	    return super.onKeyDown(keyCode, event);
 	}
 }
