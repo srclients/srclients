@@ -4,7 +4,7 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:paddingTop="15sp">
-        
+                    
     	<ImageView
     	    android:id="@+id/avatar"
     	    android:layout_width="75dp"
@@ -30,8 +30,7 @@
 	 			android:id="@+id/presentationTitle"
 				android:layout_width="wrap_content" 
 				android:layout_height="wrap_content" 
-				android:textSize="15sp"
-				android:text="Titledfgherherthrthrthrthrthhhhhhhhhhhhhhhhhh"/>
+				android:textSize="15sp"/>
 		
 		</LinearLayout>
 		
@@ -46,7 +45,7 @@
 			android:visibility="invisible"
 			android:gravity="center"
 			android:text="1600"/>
-			
+
     </RelativeLayout>    
 		
 

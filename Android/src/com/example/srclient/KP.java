@@ -99,9 +99,10 @@ public class KP extends Activity
 	 *
 	 * @return the int
 	 */
-	public native int initSubscription();
+	public static native int initSubscription();
 	public static native int startConference();
 	public static native int endConference();
+	public static native void getProjectorClassObject();
 	
 	
 	static {
@@ -167,9 +168,6 @@ public class KP extends Activity
 						return;
 					}
 					
-					if(initSubscription() != 0)
-						Log.e("Java KP", "Init subscription failed");
-					
 					if(!chBoxAnonim.isChecked()) {
 						if(userRegistration(name, password) == 0) {
 							Log.i("Java KP", "Registration successful");
@@ -181,6 +179,10 @@ public class KP extends Activity
 							return;
 						}
 					}
+					
+					if(initSubscription() != 0)
+						Log.e("Java KP", "Init subscription failed");
+					
 				} else
 					Toast.makeText(this, "You are already connected", Toast.LENGTH_SHORT).show();
 				

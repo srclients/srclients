@@ -32,10 +32,7 @@ public class ServicesMenu extends ListActivity {
 	 * Instantiates a new services menu.
 	 */
 	public ServicesMenu() {
-		if(KP.getServicesInfo(this) == -1) {
-			Log.e("servicesClass", "Faild to init services");
-			finish();
-		}
+		KP.getServicesInfo(this);
 		
 		list = new ArrayList<ServicesMenuItem>();
 	}

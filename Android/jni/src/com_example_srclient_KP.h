@@ -83,6 +83,14 @@ JNIEXPORT jint JNICALL Java_com_example_srclient_KP_initSubscription
 JNIEXPORT jint JNICALL Java_com_example_srclient_KP_endConference
   (JNIEnv *, jobject);
 
+/*
+ * Class:     com_example_srclient_KP
+ * Method:    getProjectorClassObject
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_com_example_srclient_KP_getProjectorClassObject
+  (JNIEnv *, jclass, jobject);
+
 #ifdef __cplusplus
 }
 #endif

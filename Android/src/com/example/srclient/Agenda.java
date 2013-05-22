@@ -32,8 +32,6 @@ public class Agenda extends ListActivity {
 	/** The adapter. */
 	private ListAdapter adapter;
 	
-	Agenda thisObject = this;
-	
 	/** The img default. */
 	Drawable imgDefault;
 	
@@ -79,7 +77,6 @@ public class Agenda extends ListActivity {
 			}
 		}
 		
-		
 		connectionState = 1;
 	}
 	
@@ -98,6 +95,7 @@ public class Agenda extends ListActivity {
         				R.id.duration, R.id.avatar});
 
 		((SimpleAdapter) adapter).setViewBinder(new AgendaViewBinder());
+		//adapter.registerDataSetObserver(observer);
 		setListAdapter(adapter);
 	}
 	
@@ -168,7 +166,7 @@ public class Agenda extends ListActivity {
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		menu.add(Menu.NONE, IDM_SERVICES, Menu.NONE, R.string.menu_services);
-		menu.add(Menu.NONE, IDM_SETTINGS, Menu.NONE, R.string.menu_settings);
+		//menu.add(Menu.NONE, IDM_SETTINGS, Menu.NONE, R.string.menu_settings);
 		
 		if(KP.isChairman) {
 			menu.add(Menu.NONE, IDM_STARTCONFERENCE, Menu.NONE, R.string.startConference);
@@ -197,6 +195,8 @@ public class Agenda extends ListActivity {
 				
 			case IDM_STARTCONFERENCE:
 				KP.startConference();
+				Intent startConfIntent = new Intent();
+				startConfIntent.setClass(this, Projector.class);
 				break;
 				
 			case IDM_ENDCONFERENCE:
@@ -208,10 +208,9 @@ public class Agenda extends ListActivity {
 	}
 	
 	public void updateAgenda() {
-		if(list != null)
-			list.clear();
-		//KP.loadTimeslotList(this);
-		this.recreate();
+		Intent restartIntent = getIntent();
+		finish();
+		startActivity(restartIntent);
 	}
 	
 }

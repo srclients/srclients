@@ -17,6 +17,8 @@ individual_t *section;
 
 jclass *classAgenda;
 jclass *classProjector;
+jobject *agendaClassObject;
+jobject *projectorClassObject;
 
 
 void addTimeslotToJavaList(JNIEnv *, individual_t *, jobject);

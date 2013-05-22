@@ -167,7 +167,9 @@ int activatePerson(individual_t *profile) {
 	individual_t *person = (individual_t *)person_prop->prop_value;
 
 	sslog_ss_populate_individual(person);
-	sslog_ss_update_property(person, PROPERTY_STATUS->name, "offline", "online");
+
+	if(sslog_ss_update_property(person, PROPERTY_STATUS->name, "offline", "online") == -1)
+		__android_log_print(ANDROID_LOG_ERROR, "class KP", get_error_text());
 
 	individual_t *agendaGui = sslog_new_individual(CLASS_AGENDANOTIFICATION);
 
@@ -206,6 +208,7 @@ JNIEXPORT jint JNICALL Java_com_example_srclient_KP_loadTimeslotList
   (JNIEnv *env, jclass clazz, jobject obj) {
 
 	list_t* timeslots = sslog_ss_get_individual_by_class_all(CLASS_TIMESLOT);
+	agendaClassObject = (jobject *)(*env)->NewGlobalRef(env, obj);
 
 	if (timeslots == NULL) {
 		__android_log_print(ANDROID_LOG_ERROR, "class KP",
@@ -300,19 +303,27 @@ void addTimeslotToJavaList(JNIEnv *env, individual_t *timeslot, jobject obj) {
 		individual_t *person = (individual_t *)p_val_person_link->prop_value;
 		sslog_ss_populate_individual(person);
 
-		prop_val_t *p_val_img = sslog_ss_get_property (person, PROPERTY_IMG);
+		prop_val_t *p_val_status = sslog_ss_get_property (person, PROPERTY_STATUS);
 
-		if(p_val_img != NULL) {
-			strcpy(imgLink, (char *)p_val_img->prop_value);
+		if(p_val_status != NULL) {
+			if(strcmp((char *)p_val_status->prop_value, "online") == 0) {
+
+				prop_val_t *p_val_img = sslog_ss_get_property (person, PROPERTY_IMG);
+
+				if(p_val_img != NULL) {
+					strcpy(imgLink, (char *)p_val_img->prop_value);
+				}
+			}
 		}
 	}
 
 	/* Calling Agenda's addTimeslotItemToList Java method */
-	(*env)->CallVoidMethod(env, obj, methodId,
-			(*env)->NewStringUTF(env, (char *)(p_val_name->prop_value)),
-			(*env)->NewStringUTF(env, (char *)(p_val_duration->prop_value)),
-			(*env)->NewStringUTF(env, (char *)(p_val_pres_title->prop_value)),
-			(*env)->NewStringUTF(env, imgLink));
+	if(obj != NULL)
+		(*env)->CallVoidMethod(env, obj, methodId,
+				(*env)->NewStringUTF(env, (char *)(p_val_name->prop_value)),
+				(*env)->NewStringUTF(env, (char *)(p_val_duration->prop_value)),
+				(*env)->NewStringUTF(env, (char *)(p_val_pres_title->prop_value)),
+				(*env)->NewStringUTF(env, imgLink));
 
 	free(imgLink);
 
@@ -396,9 +407,7 @@ JNIEXPORT jint JNICALL Java_com_example_srclient_KP_getServicesInfo
   (JNIEnv *env, jclass clazz, jobject menu) {
 
 	jclass class = getJClassObject(env, "ServicesMenu");
-
 	jfieldID agendaStateField = getFieldID(env, class, "agendaServiceState", "I");
-
 	jfieldID projectorStateField = getFieldID(env, class, "projectorServiceState", "I");
 
 
@@ -499,7 +508,7 @@ JNIEXPORT jint JNICALL Java_com_example_srclient_KP_initSubscription
 
 	subscription_t *subscriptionProjector = sslog_new_subscription(true);
 
-	sslog_sbcr_add_class(subscriptionProjector, CLASS_PROJECTORNOTIFICATION);
+	sslog_sbcr_add_class(subscriptionProjector, CLASS_PROJECTORSERVICE);
 	sslog_sbcr_set_changed_handler(subscriptionProjector, pProjectorHandler);
 
 	if(sslog_sbcr_subscribe(subscriptionProjector) != ERROR_NO) {
@@ -526,7 +535,7 @@ JNIEXPORT jint JNICALL Java_com_example_srclient_KP_initSubscription
 }
 
 /**
- * TODO: stoped here
+ * @brief Handles agenda changes
  */
 void agendaGUINotifHandler(subscription_t *sbcr) {
 	__android_log_print(ANDROID_LOG_ERROR, "agendaGUINotifHandler():", "IS RUNNING...");
@@ -535,12 +544,6 @@ void agendaGUINotifHandler(subscription_t *sbcr) {
 	JNIEnv *env = NULL;
 	(*JVM)->AttachCurrentThread(JVM, &env, NULL);
 
-	if(classAgenda == NULL) {
-		__android_log_print(ANDROID_LOG_ERROR, "AgendaGui Handler:", "classAgenda is NULL");
-		return;
-	}
-
-	jfieldID objectField = getFieldID(env, classAgenda, "thisObject", "Lcom/example/srclient/Agenda;");
 	jmethodID methodId = (*env)->GetMethodID(env, classAgenda, "updateAgenda", "()V");
 
 	subscription_changes_data_t *changes = sslog_sbcr_get_changes_last(sbcr);
@@ -556,29 +559,31 @@ void agendaGUINotifHandler(subscription_t *sbcr) {
 			list_t *node = list_entry(list_walker, list_t, links);
 			char *uuid = (char *) node->data;
 
-			__android_log_print(ANDROID_LOG_ERROR, "AgendaGui Handler:", uuid);
 			/* All updated properties with individual's `uuid` */
-			list_t *p_list = sslog_sbcr_ch_get_property_by_uuid(changes, uuid, ACTION_UPDATE);
+			list_t *p_list = sslog_sbcr_ch_get_property_by_uuid(changes, uuid, ACTION_INSERT);
 			list_head_t *list_walker_prop = NULL;
 
-			if(p_list == NULL)
+			if(p_list == NULL) {
+				__android_log_print(ANDROID_LOG_ERROR, "AgendaGui Handler:", "p_list is empty");
 				continue;
+			}
+
+			/* `updateAgenda()` class Agenda */
+			if(changes != NULL)
+				(*env)->CallVoidMethod(env, agendaClassObject, methodId);
 
 			/* For every changed property */
 			list_for_each(list_walker_prop, &p_list->links) {
+				__android_log_print(ANDROID_LOG_ERROR, "AgendaGui Handler:", "here it is");
 				list_t *node_prop = list_entry(list_walker_prop, list_t, links);
 				property_changes_data_t *ch_prop;
 
 				ch_prop = (property_changes_data_t *)(node_prop->data);
 
 				//__android_log_print(ANDROID_LOG_ERROR, "AgendaGui Handler:", ch_prop->property->name);
-				__android_log_print(ANDROID_LOG_ERROR, "AgendaGui Handler:", "here it is");
-
-				if(strcmp(ch_prop->property->name, PROPERTY_STARTCONFERENCE->name) == 0)
-					__android_log_print(ANDROID_LOG_ERROR, "AgendaGui Handler:", "start conference");
 
 				if(strcmp(ch_prop->property->name, PROPERTY_UPDATEAGENDA->name) == 0)
-									__android_log_print(ANDROID_LOG_ERROR, "AgendaGui Handler:", "update agenda");
+					(*env)->CallVoidMethod(env, agendaClassObject, methodId);
 			}
 
 			list_free_with_nodes(p_list, NULL);
@@ -586,9 +591,6 @@ void agendaGUINotifHandler(subscription_t *sbcr) {
 		}
 	} else
 		__android_log_print(ANDROID_LOG_ERROR, "AgendaGui Handler:", "insert list is empty");
-
-	//if(changes != NULL)
-		//(*env)->CallVoidMethod(env, objectField, methodId);
 }
 
 
@@ -610,6 +612,7 @@ JNIEXPORT jint JNICALL Java_com_example_srclient_KP_loadPresentation
 	if(methodId == 0)
 		__android_log_print(ANDROID_LOG_ERROR, "class KP", "methodId is NULL");
 
+	// TODO: add extraction of `currentSlideCount` `currentSlideNum`
 
 	/* load current presentation */
 	if(strcmp(uuid, "") == 0) {
@@ -657,7 +660,7 @@ JNIEXPORT jint JNICALL Java_com_example_srclient_KP_loadPresentation
 void projectorNotifHandler(subscription_t *sbcr) {
 
 	JNIEnv *env;
-
+	// TODO: start from here !!!
 	/* Gets jni environment pointer (env) */
 	int res = (*JVM)->AttachCurrentThread(JVM, &env, NULL);
 	if(res < 0) {
@@ -669,11 +672,11 @@ void projectorNotifHandler(subscription_t *sbcr) {
 	__android_log_print(ANDROID_LOG_ERROR, "Projector Handler:", "is running...");
 
 
-	/* Get Projector class and it's fields */
-	jfieldID objectField = getFieldID(env, classProjector, "thisObject", "Lcom/example/srclient/Projector;");
-	jfieldID slideNumberField = getFieldID(env, classProjector, "slideNumber", "I");
-	jfieldID slideCountField = getFieldID(env, classProjector, "slideCount", "I");
-
+	if(classProjector != NULL) {
+		/* Get Projector class fields */
+		jfieldID slideNumberField = getFieldID(env, classProjector, "slideNumber", "I");
+		jfieldID slideCountField = getFieldID(env, classProjector, "slideCount", "I");
+	}
 
 	jmethodID methodId = (*env)->GetMethodID(env, classProjector, "setImageLink",
 					"(Ljava/lang/String;)V");
@@ -686,65 +689,16 @@ void projectorNotifHandler(subscription_t *sbcr) {
 
 	list_head_t *list_walker = NULL;
 
-	/* For every updated individual  */
-	/*list_for_each(list_walker, &list->links) {
-		list_t *node = list_entry(list_walker, list_t, links);
-		char *uuid = (char *) node->data;
 
-		/* All updated properties with individual's `uuid` */
-		/*list_t *p_list = sslog_sbcr_ch_get_property_by_uuid_all(changes, uuid);
-		list_head_t *list_walker_prop = NULL;
+}
 
-		/* For every changed property */
-		/*list_for_each(list_walker_prop, &list->links) {
-			list_t *node_prop = list_entry(list_walker_prop, list_t, links);
-			property_changes_data_t *ch_prop;
+/**
+ * @brief Gets existing projector class object
+ **/
+JNIEXPORT void JNICALL Java_com_example_srclient_KP_getProjectorClassObject
+  (JNIEnv *env, jclass clazz, jobject obj) {
 
-			ch_prop = (property_changes_data_t *)(node_prop->data);
-
-			__android_log_print(ANDROID_LOG_ERROR, "Projector Handler:", (char *)ch_prop->property->name);
-
-			if(strcmp(ch_prop->property->name, PROPERTY_CURRENTSLIDEIMG->name) == 0) {
-				__android_log_print(ANDROID_LOG_ERROR, "Projector Handler:", (char *)ch_prop->property->name);
-
-			}
-		}
-
-		list_free_with_nodes(p_list, NULL);
-		break;
-	}
-
-
-	/* Get current image */
-	/*prop_val_t *p_val_slideImg = sslog_ss_get_property (presentationSlide,
-			PROPERTY_CURRENTSLIDEIMG);
-
-	if(p_val_slideImg == NULL)
-		__android_log_print(ANDROID_LOG_ERROR, "Projector Handler:", "slide image is null");
-	else
-		(*env)->CallVoidMethod(env, objectField, methodId,
-					(*env)->NewStringUTF(env, (char *)p_val_slideImg->prop_value));
-
-
-	/* Get current slide number */
-	/*prop_val_t *p_val_slideNum = sslog_ss_get_property (presentationSlide,
-				PROPERTY_CURRENTSLIDENUM);
-
-	if(p_val_slideNum == NULL)
-		__android_log_print(ANDROID_LOG_ERROR, "Projector Handler:", "slide number is null");
-	else
-		(*env)->SetIntField(env, objectField, slideNumberField, (int)p_val_slideNum->prop_value);
-
-
-	/* Get current slide count
-	prop_val_t *p_val_slideCount = sslog_ss_get_property (presentationSlide,
-				PROPERTY_CURRENTSLIDECOUNT);
-
-	if(p_val_slideCount == NULL)
-		__android_log_print(ANDROID_LOG_ERROR, "Projector Handler:", "slide count is null");
-	else
-		(*env)->SetIntField(env, objectField, slideCountField, (int)p_val_slideCount->prop_value);*/
-
+	projectorClassObject = (jobject *)(*env)->NewGlobalRef(env, obj);
 }
 
 
