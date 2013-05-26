@@ -10,6 +10,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.RelativeLayout;
 import android.graphics.drawable.Drawable;
+import java.lang.Runnable;
 
 import java.io.InputStream;
 import java.lang.Thread;
@@ -78,7 +79,7 @@ public class Projector extends Activity
 		}
 		
 		slideImageLink = slideImageLink.replace("127.0.0.1", KP.ip);
-		Log.i("imageLink:", slideImageLink);
+		//Log.i("imageLink:", slideImageLink);
 		
 		Thread thread = new Thread() {
 			@Override
@@ -220,30 +221,54 @@ public class Projector extends Activity
 				break;
 				
 			case IDM_REFRESH:
-				updateProjector();
+				try {
+					updateProjector();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
 				break;
 		}
 		
 		return super.onOptionsItemSelected(item);
 	}
 	
-	public void updateProjector() {
+	public void updateProjector() throws InterruptedException {
 		Log.i("Projector", "update start");
-		Intent restartIntent = getIntent();
-		finish();
-		startActivity(restartIntent);
+		
+		KP.loadPresentation("", this);
+		slideImageLink = slideImageLink.replace("127.0.0.1", KP.ip);
+		//Log.i("imageLink:", slideImageLink);
+		
+		Thread thread = new Thread() {
+			@Override
+			public void run() {
+				slideImageDrawable = loadImage(slideImageLink);
+			};
+		};
+		
+		thread.start();
+		thread.join();
+		
+		runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				presentationImage.setImageDrawable(slideImageDrawable);
+				presentationImage.invalidate();
+			};
+			
+		});
+		
 		Log.i("Projector", "update DONE");
 	}
 	
 	public void nextSlide() {
-		KP.showSlide(slideNumber + 1);
-		++slideNumber;
+		Log.i("slide number", String.valueOf(slideNumber));
+		KP.showSlide(++slideNumber);
 	}
 	
 	public void previousSlide() {
-		if(slideNumber != 1) {
-			KP.showSlide(slideNumber - 1);
-			--slideNumber;
-		}
+		Log.i("slide number", String.valueOf(slideNumber));
+		if(slideNumber > 1)
+			KP.showSlide(--slideNumber);
 	}
 }

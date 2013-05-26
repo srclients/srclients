@@ -41,7 +41,7 @@ public class KP extends Activity
 	
 	/** The uuid. */
 	String uuid;
-	public static final String ip = "192.168.0.20";
+	public static final String ip = "192.168.0.22";
 	
 	/*
 	 * 	Native functions prototypes
@@ -162,7 +162,7 @@ public class KP extends Activity
 					// 10.0.2.2 - local; 
 					// 172.21.0.181 - it-guest
 					// 192.168.112.109 - smart room SIB
-					if(connectSmartSpace("X", "192.168.0.20", 10010) != 0) {
+					if(connectSmartSpace("X", ip, 10010) != 0) {
 						Toast.makeText(this, "Connection failed", Toast.LENGTH_SHORT).show();
 						return;
 					}

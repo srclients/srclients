@@ -302,7 +302,8 @@ void addTimeslotToJavaList(JNIEnv *env, individual_t *timeslot, jobject obj) {
 	/* Gets person link property */
 	char *imgLink = (char *) malloc (sizeof(char) * 200);
 
-	strcpy(imgLink, "http://upload.wikimedia.org/wikipedia/commons/3/36/Bonhomme_crystal_marron.png");
+	//strcpy(imgLink, "http://upload.wikimedia.org/wikipedia/commons/3/36/Bonhomme_crystal_marron.png");
+	strcpy(imgLink, "http://192.168.0.22/absent.png");
 
 	prop_val_t *p_val_person_link = sslog_ss_get_property (timeslot, PROPERTY_PERSONLINK);
 	if(p_val_person_link != NULL) {

@@ -38,7 +38,8 @@ public class Agenda extends ListActivity {
 	Drawable imgDefault;
 	
 	/** The absent img. */
-	String absentImg = "http://upload.wikimedia.org/wikipedia/commons/3/36/Bonhomme_crystal_marron.png";
+	//String absentImg = "http://upload.wikimedia.org/wikipedia/commons/3/36/Bonhomme_crystal_marron.png";
+	String absentImg = "http://192.168.0.22/absent.png";
 	
 	/** The connection state. */
 	int connectionState = 0;
