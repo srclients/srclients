@@ -589,7 +589,23 @@ void agendaNotificationHandler(individual_t *individual) {
 
 	/* Gets jni environment pointer (env) */
 	JNIEnv *env = NULL;
-	(*JVM)->AttachCurrentThread(JVM, &env, NULL);
+	bool attached = false;
+
+	switch((*JVM)->GetEnv(JVM, (void **)&env, JNI_VERSION_1_6)) {
+
+		case JNI_OK:
+			break;
+
+		case JNI_EDETACHED:
+			(*JVM)->AttachCurrentThread(JVM, &env, NULL);
+			attached = true;
+			break;
+
+		case JNI_EVERSION:
+			__android_log_print(ANDROID_LOG_ERROR, "projectorHandler:",
+					"invalid jni version");
+			break;
+	}
 
 	pthread_t thread;
 
@@ -610,6 +626,9 @@ void agendaNotificationHandler(individual_t *individual) {
 			__android_log_print(ANDROID_LOG_ERROR, "agendaHandler:", "update OK");
 		}
 	}
+
+	if(attached)
+		(*JVM)->DetachCurrentThread(JVM);
 }
 
 
@@ -623,6 +642,7 @@ JNIEXPORT jint JNICALL Java_com_example_srclient_KP_loadPresentation
 
 	const char *uuid = (*env) -> GetStringUTFChars(env, stringUuid, NULL);
 	char *slideImg = (char *) malloc (sizeof(char) * 200);
+	//char *tmp = (char *) malloc (sizeof(char) * 10);
 	prop_val_t *p_val_slideNum = 0;
 	prop_val_t *p_val_slideCount = 0;
 	prop_val_t *p_val_slideImg = NULL;
@@ -632,8 +652,10 @@ JNIEXPORT jint JNICALL Java_com_example_srclient_KP_loadPresentation
 
 	__android_log_print(ANDROID_LOG_ERROR, "loadPresentation()", "start");
 
+	/*jmethodID methodId = (*env)->GetMethodID(env, classProjector, "loadProjector",
+				"(Ljava/lang/String;II)V");*/
 	jmethodID methodId = (*env)->GetMethodID(env, classProjector, "loadProjector",
-				"(Ljava/lang/String;II)V");
+				"(Ljava/lang/String;I)V");
 
 	if(strcmp(uuid, "") == 0) {
 		list_t* projectorServiceList = sslog_ss_get_individual_by_class_all(
@@ -679,9 +701,14 @@ JNIEXPORT jint JNICALL Java_com_example_srclient_KP_loadPresentation
 		// TODO
 	}
 
+	//snprintf(tmp, strlen(tmp), "%d", (int)p_val_slideNum->prop_value);
+	//__android_log_print(ANDROID_LOG_ERROR, "loadPresentation()", tmp);
+
+	__android_log_print(ANDROID_LOG_ERROR, "loadPresentation()", "loading Projector...");
+
 	(*env)->CallVoidMethod(env, projectorClassObject, methodId,
 			(*env)->NewStringUTF(env, slideImg),
-			(int)p_val_slideNum->prop_value,
+			//(int)p_val_slideNum->prop_value,
 			(int)p_val_slideCount->prop_value);
 
 	__android_log_print(ANDROID_LOG_ERROR, "loadPresentation()", "DONE");
@@ -703,9 +730,26 @@ void projectorNotificationHandler(individual_t *individual) {
 
 	/* Gets jni environment pointer (env) */
 	JNIEnv *env;
-	(*JVM)->AttachCurrentThread(JVM, &env, NULL);
+	bool attached = false;
 
-	pthread_t thread;
+	switch((*JVM)->GetEnv(JVM, (void **)&env, JNI_VERSION_1_6)) {
+
+		case JNI_OK:
+			__android_log_print(ANDROID_LOG_ERROR, "projHandler:", "attaching...");
+			break;
+
+		case JNI_EDETACHED:
+			__android_log_print(ANDROID_LOG_ERROR, "projHandler:", "not attached");
+			(*JVM)->AttachCurrentThread(JVM, &env, NULL);
+			attached = true;
+			break;
+
+		case JNI_EVERSION:
+			__android_log_print(ANDROID_LOG_ERROR, "projectorHandler:",
+					"invalid jni version");
+			break;
+	}
+
 
 	jfieldID projectorCreated = (*env)->GetStaticFieldID(env, classProjector,
 				"projectorCreated", "I");
@@ -723,6 +767,9 @@ void projectorNotificationHandler(individual_t *individual) {
 		__android_log_print(ANDROID_LOG_ERROR, "projectorHandler:", "update");
 		(*env)->CallVoidMethod(env, projectorClassObject, updateProjector);
 	}
+
+	if(attached)
+		(*JVM)->DetachCurrentThread(JVM);
 }
 
 
@@ -782,6 +829,31 @@ JNIEXPORT jint JNICALL Java_com_example_srclient_KP_endConference
 	sslog_set_individual_uuid(individual, generateUuid("agenda-gui-notification"));
 
 	if(sslog_ss_add_property(individual, PROPERTY_ENDCONFERENCE, firstTimeslot) != 0 ) {
+		__android_log_print(ANDROID_LOG_ERROR, "endConference()", get_error_text());
+		return -1;
+	}
+
+	if(sslog_ss_insert_individual(individual) != 0) {
+		__android_log_print(ANDROID_LOG_ERROR, "endConference()", get_error_text());
+		return -1;
+	}
+
+	return 0;
+}
+
+/**
+ * @brief Changes current presentation slide
+ */
+JNIEXPORT jint JNICALL Java_com_example_srclient_KP_showSlide
+  (JNIEnv *env, jclass clazz, jint slideNumber) {
+
+	char *number = (char*) malloc (sizeof(char) * 3);
+	snprintf(number, strlen(number), "%d", (int)slideNumber);
+
+	individual_t *individual = sslog_new_individual(CLASS_PROJECTORNOTIFICATION);
+	sslog_set_individual_uuid(individual, generateUuid("projector-notification"));
+
+	if(sslog_ss_add_property(individual, PROPERTY_SHOWSLIDE,  number) != 0 ) {
 		__android_log_print(ANDROID_LOG_ERROR, "endConference()", get_error_text());
 		return -1;
 	}

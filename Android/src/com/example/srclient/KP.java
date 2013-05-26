@@ -104,6 +104,7 @@ public class KP extends Activity
 	public static native int startConference();
 	public static native int endConference();
 	public static native void getProjectorClassObject();
+	public static native int showSlide(int slideNumber);
 	
 	
 	static {

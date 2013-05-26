@@ -91,6 +91,16 @@ JNIEXPORT jint JNICALL Java_com_example_srclient_KP_endConference
 JNIEXPORT void JNICALL Java_com_example_srclient_KP_getProjectorClassObject
   (JNIEnv *, jclass, jobject);
 
+
+/*
+ * Class:     com_example_srclient_KP
+ * Method:    showSlide
+ * Signature: ()V
+ */
+JNIEXPORT jint JNICALL Java_com_example_srclient_KP_showSlide
+  (JNIEnv *, jclass, jint);
+
+
 #ifdef __cplusplus
 }
 #endif

@@ -28,6 +28,8 @@ public class Projector extends Activity
 	/** The Constant IDM_SETTINGS. */
 	private static final int IDM_SETTINGS = 101;
 	
+	private static final int IDM_REFRESH = 102;
+	
 	public static int projectorCreated = 0;
 	
 	/** The this object. */
@@ -58,7 +60,7 @@ public class Projector extends Activity
 	String slideImageLink;
 	
 	/** The slide number. */
-	int slideNumber;
+	static int slideNumber = 1;
 	
 	/** The slide count. */
 	int slideCount;
@@ -100,7 +102,9 @@ public class Projector extends Activity
 		linearLayout.setVisibility(RelativeLayout.INVISIBLE);
 		
 		leftArrowBtn = (ImageView) findViewById (R.id.btnBack);
+		leftArrowBtn.setOnClickListener(this);
 		rightArrowBtn = (ImageView) findViewById (R.id.btnForward);
+		rightArrowBtn.setOnClickListener(this);
 		pauseBtn = (ImageView) findViewById (R.id.btnPause);
 		
 		presentationImage = (ImageView) findViewById (R.id.presImage);
@@ -116,18 +120,25 @@ public class Projector extends Activity
 	 * @see android.view.View.OnClickListener#onClick(android.view.View)
 	 */
 	public void onClick(View v) {
-		// TODO: handle button click (back, pause, forward) events
 		
-		if(v.getId() == R.id.presImage) {
-			
-			if(layoutIsActive) {
-				linearLayout.setVisibility(RelativeLayout.INVISIBLE);
-				layoutIsActive = false;
-			}
-			else {
-				linearLayout.setVisibility(RelativeLayout.VISIBLE);
-				layoutIsActive = true;
-			}
+		switch(v.getId()) {
+			case R.id.presImage:
+				if(layoutIsActive) {
+					linearLayout.setVisibility(RelativeLayout.INVISIBLE);
+					layoutIsActive = false;
+				} else {
+					linearLayout.setVisibility(RelativeLayout.VISIBLE);
+					layoutIsActive = true;
+				}
+				break;
+				
+			case R.id.btnForward:
+				nextSlide();
+				break;
+				
+			case R.id.btnBack:
+				previousSlide();
+				break;
 		}
 	}
 	
@@ -157,7 +168,6 @@ public class Projector extends Activity
 		return imgDrawable;
 	}
 	
-	/* Sets image url */
 	/**
 	 * Sets the image link.
 	 *
@@ -174,10 +184,10 @@ public class Projector extends Activity
 	 * @param slideNumber
 	 * @param slideCount
 	 */
-	public void loadProjector(String imgLink, int slideNumber, int slideCount) {
+	public void loadProjector(String imgLink, /*int slideNumber,*/ int slideCount) {
 		slideImageLink = imgLink;
-		this.slideNumber = slideNumber;
-		this.slideCount =slideCount;  
+		//this.slideNumber = slideNumber;
+		this.slideCount = slideCount;  
 	}
 	
 	/* (non-Javadoc)
@@ -187,6 +197,7 @@ public class Projector extends Activity
 	public boolean onCreateOptionsMenu(Menu menu) {
 		menu.add(Menu.NONE, IDM_SERVICES, Menu.NONE, R.string.menu_services);
 		menu.add(Menu.NONE, IDM_SETTINGS, Menu.NONE, R.string.menu_settings);
+		menu.add(Menu.NONE, IDM_REFRESH, Menu.NONE, R.string.menu_refresh);
 		
 		return super.onCreateOptionsMenu(menu);
 	}
@@ -207,6 +218,10 @@ public class Projector extends Activity
 			
 			case IDM_SETTINGS:
 				break;
+				
+			case IDM_REFRESH:
+				updateProjector();
+				break;
 		}
 		
 		return super.onOptionsItemSelected(item);
@@ -218,5 +233,17 @@ public class Projector extends Activity
 		finish();
 		startActivity(restartIntent);
 		Log.i("Projector", "update DONE");
+	}
+	
+	public void nextSlide() {
+		KP.showSlide(slideNumber + 1);
+		++slideNumber;
+	}
+	
+	public void previousSlide() {
+		if(slideNumber != 1) {
+			KP.showSlide(slideNumber - 1);
+			--slideNumber;
+		}
 	}
 }
