@@ -28,6 +28,8 @@ public class Projector extends Activity
 	/** The Constant IDM_SETTINGS. */
 	private static final int IDM_SETTINGS = 101;
 	
+	public static int projectorCreated = 0;
+	
 	/** The this object. */
 	Projector thisObject = this;
 
@@ -70,8 +72,11 @@ public class Projector extends Activity
 	public Projector() throws InterruptedException {
 		if(KP.loadPresentation("", this) != 0) {
 			Log.i("Projector GUI", "Projector init fail");
-			finish();
+			return;
 		}
+		
+		slideImageLink = slideImageLink.replace("127.0.0.1", KP.ip);
+		Log.i("imageLink:", slideImageLink);
 		
 		Thread thread = new Thread() {
 			@Override
@@ -103,6 +108,7 @@ public class Projector extends Activity
 		presentationImage.setOnClickListener(this);
 		
 		layoutIsActive = false;
+		projectorCreated = 1;
 	}
 	
 	
@@ -161,6 +167,19 @@ public class Projector extends Activity
 		slideImageLink = link;
 	}
 	
+	/**
+	 * @brief Initialize projector when `startConference` received
+	 * 
+	 * @param imgLink
+	 * @param slideNumber
+	 * @param slideCount
+	 */
+	public void loadProjector(String imgLink, int slideNumber, int slideCount) {
+		slideImageLink = imgLink;
+		this.slideNumber = slideNumber;
+		this.slideCount =slideCount;  
+	}
+	
 	/* (non-Javadoc)
 	 * @see android.app.Activity#onCreateOptionsMenu(android.view.Menu)
 	 */
@@ -191,5 +210,13 @@ public class Projector extends Activity
 		}
 		
 		return super.onOptionsItemSelected(item);
+	}
+	
+	public void updateProjector() {
+		Log.i("Projector", "update start");
+		Intent restartIntent = getIntent();
+		finish();
+		startActivity(restartIntent);
+		Log.i("Projector", "update DONE");
 	}
 }

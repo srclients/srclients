@@ -41,6 +41,7 @@ public class KP extends Activity
 	
 	/** The uuid. */
 	String uuid;
+	public static final String ip = "192.168.0.20";
 	
 	/*
 	 * 	Native functions prototypes
@@ -99,7 +100,7 @@ public class KP extends Activity
 	 *
 	 * @return the int
 	 */
-	public static native int initSubscription();
+	public native int initSubscription();
 	public static native int startConference();
 	public static native int endConference();
 	public static native void getProjectorClassObject();
@@ -146,9 +147,6 @@ public class KP extends Activity
 		String name = editName.getText().toString();
 		String password = editPassword.getText().toString();
 		
-		Intent intent = new Intent();
-		intent.setClass(this, Agenda.class);
-		
 		if(name.equals("") || password.equals("")) {
 			Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show();
 			return;
@@ -167,7 +165,8 @@ public class KP extends Activity
 						Toast.makeText(this, "Connection failed", Toast.LENGTH_SHORT).show();
 						return;
 					}
-					
+					Log.i("Connection", "DONE");
+
 					if(!chBoxAnonim.isChecked()) {
 						if(userRegistration(name, password) == 0) {
 							Log.i("Java KP", "Registration successful");
@@ -179,14 +178,16 @@ public class KP extends Activity
 							return;
 						}
 					}
-					
+					Log.i("Registration", "DONE");
+
 					if(initSubscription() != 0)
 						Log.e("Java KP", "Init subscription failed");
+					Log.i("InitSbcr", "DONE");
 					
 				} else
 					Toast.makeText(this, "You are already connected", Toast.LENGTH_SHORT).show();
 				
-				startActivity(intent);
+				loadAgenda();
 				break;
 		}
 	}
@@ -198,5 +199,11 @@ public class KP extends Activity
 	    	connectionState = -1;
 	    }
 	    return super.onKeyDown(keyCode, event);
+	}
+	
+	public void loadAgenda() {
+		Intent intent = new Intent();
+		intent.setClass(this, Agenda.class);
+		startActivity(intent);
 	}
 }

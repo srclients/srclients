@@ -26,6 +26,8 @@ public class Agenda extends ListActivity {
 	private static final int IDM_STARTCONFERENCE = 102;
 	private static final int IDM_ENDCONFERENCE = 103;
 	
+	public static int agendaCreated = 0;
+	
 	/** The list. */
 	private ArrayList<Timeslot> list;
 	
@@ -95,8 +97,8 @@ public class Agenda extends ListActivity {
         				R.id.duration, R.id.avatar});
 
 		((SimpleAdapter) adapter).setViewBinder(new AgendaViewBinder());
-		//adapter.registerDataSetObserver(observer);
 		setListAdapter(adapter);
+		agendaCreated = 1;
 	}
 	
 	
@@ -194,9 +196,7 @@ public class Agenda extends ListActivity {
 				break;
 				
 			case IDM_STARTCONFERENCE:
-				KP.startConference();
-				Intent startConfIntent = new Intent();
-				startConfIntent.setClass(this, Projector.class);
+				startConference();
 				break;
 				
 			case IDM_ENDCONFERENCE:
@@ -213,4 +213,13 @@ public class Agenda extends ListActivity {
 		startActivity(restartIntent);
 	}
 	
+	public void startConference() {
+		KP.startConference();
+	}
+	
+	public void startPresentation() {
+		Intent intent = new Intent();
+		intent.setClass(this, Projector.class);
+		startActivity(intent);
+	}
 }
