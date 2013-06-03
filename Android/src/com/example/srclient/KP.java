@@ -100,7 +100,7 @@ public class KP extends Activity
 	 *
 	 * @return the int
 	 */
-	public native int initSubscription();
+	public static native int initSubscription();
 	public static native int startConference();
 	public static native int endConference();
 	public static native void getProjectorClassObject();

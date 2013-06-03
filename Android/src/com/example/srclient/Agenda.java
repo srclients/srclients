@@ -4,6 +4,8 @@ import android.app.ListActivity;
 import android.os.Bundle;
 import android.widget.ListAdapter;
 import android.widget.SimpleAdapter;
+import android.widget.Toast;
+
 import java.util.ArrayList;
 import android.util.Log;
 import android.view.Menu;
@@ -151,8 +153,10 @@ public class Agenda extends ListActivity {
 			InputStream is = (InputStream) new URL(link).getContent();
 			imgDrawable = Drawable.createFromStream(is, "avatar");
 			
-			if(imgDrawable == null)
+			if(imgDrawable == null) {
 				Log.e("Java agenda", "imgDrawable = null");
+				return null;
+			}
 			
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -197,11 +201,13 @@ public class Agenda extends ListActivity {
 				break;
 				
 			case IDM_STARTCONFERENCE:
-				startConference();
+				if(startConference() == -1)
+					Toast.makeText(this, "Start conference failed", Toast.LENGTH_SHORT).show();
 				break;
 				
 			case IDM_ENDCONFERENCE:
-				KP.endConference();
+				if(endConference() == -1)
+					Toast.makeText(this, "End conference failed", Toast.LENGTH_SHORT).show();
 				break;
 		}
 		
@@ -214,8 +220,12 @@ public class Agenda extends ListActivity {
 		startActivity(restartIntent);
 	}
 	
-	public void startConference() {
-		KP.startConference();
+	public int startConference() {
+		return KP.startConference();
+	}
+	
+	public int endConference() {
+		return KP.endConference();
 	}
 	
 	public void startPresentation() {

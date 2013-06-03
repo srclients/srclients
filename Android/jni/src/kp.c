@@ -215,7 +215,11 @@ JNIEXPORT jint JNICALL Java_com_example_srclient_KP_loadTimeslotList
   (JNIEnv *env, jclass clazz, jobject obj) {
 
 	list_t* timeslots = sslog_ss_get_individual_by_class_all(CLASS_TIMESLOT);
-	agendaClassObject = (jobject *)(*env)->NewGlobalRef(env, obj);
+
+	if(obj != NULL)
+		agendaClassObject = (jobject *)(*env)->NewGlobalRef(env, obj);
+	else
+		return -1;
 
 	if (timeslots == NULL) {
 		__android_log_print(ANDROID_LOG_ERROR, "class KP",
@@ -649,6 +653,9 @@ JNIEXPORT jint JNICALL Java_com_example_srclient_KP_loadPresentation
 	prop_val_t *p_val_slideImg = NULL;
 	individual_t *projectorService = NULL;
 
+	if(projectorClassObj == NULL)
+		return -1;
+
 	projectorClassObject = (jobject *)(*env)->NewGlobalRef(env, projectorClassObj);
 
 	__android_log_print(ANDROID_LOG_ERROR, "loadPresentation()", "start");
@@ -696,7 +703,9 @@ JNIEXPORT jint JNICALL Java_com_example_srclient_KP_loadPresentation
 							"slideCount is null");
 					return -1;
 				}
-			}
+			} else
+				return -1;
+
 	} else {
 		/* load presentation by `uuid` */
 		// TODO
@@ -759,7 +768,7 @@ void projectorNotificationHandler(individual_t *individual) {
 			classProjector, projectorCreated);
 
 	jmethodID updateProjector = (*env)->GetMethodID(env, classProjector,
-			"updateProjector", "()V");
+			"updateProjector", "()I");
 
 	if(individual == NULL)
 		return;

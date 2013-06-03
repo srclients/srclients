@@ -61,7 +61,7 @@ public class Projector extends Activity
 	String slideImageLink;
 	
 	/** The slide number. */
-	static int slideNumber = 1;
+	public static int slideNumber = 1;
 	
 	/** The slide count. */
 	int slideCount;
@@ -158,8 +158,10 @@ public class Projector extends Activity
 			InputStream is = (InputStream) new URL(link).getContent();
 			imgDrawable = Drawable.createFromStream(is, "avatar");
 			
-			if(imgDrawable == null)
+			if(imgDrawable == null) {
 				Log.e("Java projector", "imgDrawable = null");
+				return null;
+			}
 			
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -232,10 +234,12 @@ public class Projector extends Activity
 		return super.onOptionsItemSelected(item);
 	}
 	
-	public void updateProjector() throws InterruptedException {
+	public int updateProjector() throws InterruptedException {
 		Log.i("Projector", "update start");
 		
-		KP.loadPresentation("", this);
+		if(KP.loadPresentation("", this) == -1)
+			return -1;
+		
 		slideImageLink = slideImageLink.replace("127.0.0.1", KP.ip);
 		//Log.i("imageLink:", slideImageLink);
 		
@@ -259,16 +263,27 @@ public class Projector extends Activity
 		});
 		
 		Log.i("Projector", "update DONE");
+		
+		return 0;
 	}
 	
-	public void nextSlide() {
+	public int nextSlide() {
 		Log.i("slide number", String.valueOf(slideNumber));
-		KP.showSlide(++slideNumber);
+		if(slideNumber == 15)
+			slideNumber = 0;
+		
+		if(KP.showSlide(slideNumber + 1) == -1)
+			return -1;
+		
+		++slideNumber;
+		return 0;
 	}
 	
-	public void previousSlide() {
+	public int previousSlide() {
 		Log.i("slide number", String.valueOf(slideNumber));
 		if(slideNumber > 1)
-			KP.showSlide(--slideNumber);
+			return KP.showSlide(--slideNumber);
+		
+		return -1;
 	}
 }
