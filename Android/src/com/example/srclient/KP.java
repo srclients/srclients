@@ -28,6 +28,8 @@ public class KP extends Activity
 	/** The edit password. */
 	EditText editPassword;
 	
+	EditText editIP;
+	
 	/** The ch box anonim. */
 	CheckBox chBoxAnonim;
 	
@@ -41,7 +43,7 @@ public class KP extends Activity
 	
 	/** The uuid. */
 	String uuid;
-	public static final String ip = "192.168.0.22";
+	public static String ip;
 	
 	/*
 	 * 	Native functions prototypes
@@ -129,12 +131,14 @@ public class KP extends Activity
         
         editName = (EditText) findViewById (R.id.editName);
         editPassword = (EditText) findViewById (R.id.editPassword);
+        editIP = (EditText) findViewById (R.id.editIP);
         
         chBoxAnonim = (CheckBox) findViewById (R.id.checkBoxAnonim);
         chBoxAnonim.setChecked(false);
         
-        editName.setText("vdovenko");
-        editPassword.setText("vdovenko");
+        editIP.setText("192.168.0.20");
+        //editName.setText("vdovenko");
+        //editPassword.setText("vdovenko");
         
         isChairman = false;
 	}
@@ -147,8 +151,15 @@ public class KP extends Activity
 		
 		String name = editName.getText().toString();
 		String password = editPassword.getText().toString();
+		ip = editIP.getText().toString();
 		
-		if(name.equals("") || password.equals("")) {
+		if(ip.equals("")) {
+			Toast.makeText(this, "Please enter IP address", Toast.LENGTH_SHORT).show();
+			return;
+		}
+		
+		if((name.equals("") || password.equals("")) 
+				&& !chBoxAnonim.isChecked()) {
 			Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show();
 			return;
 		}

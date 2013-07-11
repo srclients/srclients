@@ -4,6 +4,7 @@
     <string name="app_name">SRClient</string>
     <string name="action_settings">Settings</string>
     <string name="sr_client">SR-client</string>
+    <string name="ssIP">IP: </string>
     <string name="participantName">Name: </string>
     <string name="participantEmail">Email: </string>
     <string name="participantPhone">Phone: </string>

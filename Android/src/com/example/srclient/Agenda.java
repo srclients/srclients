@@ -15,6 +15,7 @@ import java.io.InputStream;
 import java.net.URL;
 import android.graphics.drawable.Drawable;
 import java.lang.Thread;
+import android.content.Context;
 
 
 // TODO: Auto-generated Javadoc
@@ -36,12 +37,10 @@ public class Agenda extends ListActivity {
 	/** The adapter. */
 	private ListAdapter adapter;
 	
-	/** The img default. */
 	Drawable imgDefault;
 	
 	/** The absent img. */
-	//String absentImg = "http://upload.wikimedia.org/wikipedia/commons/3/36/Bonhomme_crystal_marron.png";
-	String absentImg = "http://192.168.0.22/absent.png";
+	String absentImg = "absentImage";
 	
 	/** The connection state. */
 	int connectionState = 0;
@@ -52,11 +51,9 @@ public class Agenda extends ListActivity {
 	 * @throws InterruptedException the interrupted exception
 	 */
 	public Agenda() throws InterruptedException {		
-		ArrayList<Timeslot> list_tmp = new ArrayList<Timeslot>();
-		
-		list = new ArrayList<Timeslot>();
-		
+		/*
 		Thread t = new Thread() {
+			@Override
 			public void run() {
 				imgDefault = loadImage(absentImg);				
 			};
@@ -64,25 +61,7 @@ public class Agenda extends ListActivity {
 		
 		t.start();
 		t.join();
-		
-		
-		if(connectionState == 0) {
-			
-			if(KP.loadTimeslotList(this) == -1) {
-				Log.i("Agenda GUI", "Fill agenda fail");
-				finish();
-			}
-			
-			list_tmp = (ArrayList<Timeslot>)list.clone();
-			list.clear();
-			
-			/* Reverse timeslot list */
-			for(int i = list_tmp.size() - 1; i >= 0; i--) {
-				list.add(new Timeslot(list_tmp.get(i)));
-			}
-		}
-		
-		connectionState = 1;
+		*/
 	}
 	
 	/* (non-Javadoc)
@@ -91,6 +70,10 @@ public class Agenda extends ListActivity {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		
+		imgDefault = this.getResources().getDrawable(R.drawable.user);
+		
+		prepareAgendaDate();
         
 		adapter = new SimpleAdapter(
         		this, list, R.layout.agenda_interface, 
@@ -134,7 +117,7 @@ public class Agenda extends ListActivity {
 		} else
 			synchronized(list) {
 				list.add(new Timeslot(name, duration, title, imgDefault));
-			}	
+			}
 	}
 	
 	
@@ -148,7 +131,6 @@ public class Agenda extends ListActivity {
 	synchronized public Drawable loadImage(String link) {
 		Drawable imgDrawable = null;
 
-		
 		try {			
 			InputStream is = (InputStream) new URL(link).getContent();
 			imgDrawable = Drawable.createFromStream(is, "avatar");
@@ -232,5 +214,32 @@ public class Agenda extends ListActivity {
 		Intent intent = new Intent();
 		intent.setClass(this, Projector.class);
 		startActivity(intent);
+	}
+	
+	public int prepareAgendaDate() {
+		ArrayList<Timeslot> list_tmp = new ArrayList<Timeslot>();
+		
+		list = new ArrayList<Timeslot>();
+		
+		if(connectionState == 0) {
+			
+			if(KP.loadTimeslotList(this) == -1) {
+				Log.i("Agenda GUI", "Fill agenda fail");
+				finish();
+				return -1;
+			}
+			
+			list_tmp = (ArrayList<Timeslot>)list.clone();
+			list.clear();
+			
+			/* Reverse timeslot list */
+			for(int i = list_tmp.size() - 1; i >= 0; i--) {
+				list.add(new Timeslot(list_tmp.get(i)));
+			}
+		}
+		
+		connectionState = 1;
+		
+		return 0;
 	}
 }
