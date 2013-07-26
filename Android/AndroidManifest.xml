@@ -40,6 +40,11 @@
             android:launchMode="singleTask"
             android:label="@string/projector"
             android:screenOrientation="landscape"></activity>
+         
+         <service
+             android:name="com.example.srclient.MicService"
+             android:label="@string/mic_service"></service>
+             
     </application>
 
 </manifest>

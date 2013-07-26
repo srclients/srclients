@@ -5,7 +5,6 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <jni.h>
-#include <pthread.h>
 
 #define MAX_CLASS_NAME_LENGTH 20
 #define ERROR_MSG_LENGTH 40
@@ -15,6 +14,9 @@ JavaVM* JVM;
 
 individual_t *firstTimeslot;
 individual_t *section;
+individual_t *personProfile;
+
+int currentTimeslotIndex;
 
 jclass *classAgenda;
 jclass *classProjector;
@@ -32,8 +34,8 @@ jfieldID getFieldID(JNIEnv *, jclass, char *, char *);
 int searchPerson(individual_t *, char *, char *);
 int activatePerson(individual_t *);
 void subscriptionHandler(subscription_t *);
-void projectorNotificationHandler(individual_t *);
-void agendaNotificationHandler(individual_t *);
+void projectorNotificationHandler(subscription_t *);
+void agendaNotificationHandler(subscription_t *);
 
 
 #endif

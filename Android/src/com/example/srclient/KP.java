@@ -11,6 +11,10 @@ import java.util.ArrayList;
 import android.widget.EditText;
 import android.widget.CheckBox;
 import android.view.KeyEvent;
+import android.content.SharedPreferences;
+import 	android.content.Context;
+
+import 	java.lang.ClassCastException;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -37,6 +41,7 @@ public class KP extends Activity
 	static int connectionState;
 	
 	static boolean isChairman;
+	static boolean isSpectator;
 	
 	/** The timeslot list. */
 	ArrayList<String> timeslotList;
@@ -95,7 +100,7 @@ public class KP extends Activity
 	 * @param projector the projector
 	 * @return the int
 	 */
-	public static native int loadPresentation(String presentationUuid, Projector projector);
+	public static native int loadPresentation(Projector projector);
 	
 	/**
 	 * Inits the subscription.
@@ -107,7 +112,9 @@ public class KP extends Activity
 	public static native int endConference();
 	public static native void getProjectorClassObject();
 	public static native int showSlide(int slideNumber);
-	
+	public static native int endPresentation();
+	public static native int getCurrentTimeslotIndex();
+	public static native boolean checkSpeakerState();
 	
 	static {
 		System.loadLibrary("sslog");
@@ -118,6 +125,39 @@ public class KP extends Activity
 	 * Instantiates a new kp.
 	 */
 	public KP() {}
+	
+	@Override
+	protected void onResume() {
+		super.onResume();
+		SharedPreferences prefs = getSharedPreferences("srclient_conf", Context.MODE_PRIVATE);
+		
+		try {
+			String ip = prefs.getString("ip", "192.168.112.109");
+			String username = prefs.getString("username", "vdovenko");
+			String password = prefs.getString("password", "vdovenko");
+			
+			editIP.setText(ip);
+			editName.setText(username);
+	        editPassword.setText(password);
+		} catch(ClassCastException e) {
+			e.printStackTrace();
+			editIP.setText("192.168.0.20");
+			editName.setText("");
+	        editPassword.setText("");
+		}
+	}
+	
+	@Override
+	protected void onPause() {
+		super.onPause();
+		SharedPreferences prefs = getSharedPreferences("srclient_conf", Context.MODE_PRIVATE);
+		SharedPreferences.Editor editor = prefs.edit();
+		
+		editor.putString("ip", editIP.getText().toString());
+		editor.putString("username", editName.getText().toString());
+		editor.putString("password", editPassword.getText().toString());
+		editor.commit();
+	}
 	
 	/* (non-Javadoc)
 	 * @see android.app.Activity#onCreate(android.os.Bundle)
@@ -136,11 +176,8 @@ public class KP extends Activity
         chBoxAnonim = (CheckBox) findViewById (R.id.checkBoxAnonim);
         chBoxAnonim.setChecked(false);
         
-        editIP.setText("192.168.0.20");
-        //editName.setText("vdovenko");
-        //editPassword.setText("vdovenko");
-        
         isChairman = false;
+        isSpectator = false;
 	}
 	
 	
@@ -189,7 +226,9 @@ public class KP extends Activity
 							Toast.makeText(this, "Registration failed", Toast.LENGTH_SHORT).show();
 							return;
 						}
-					}
+					} else
+						isSpectator = true;
+					
 					Log.i("Registration", "DONE");
 
 					if(initSubscription() != 0)
@@ -208,7 +247,7 @@ public class KP extends Activity
 	public boolean onKeyDown(int keyCode, KeyEvent event)  {
 	    if (keyCode == KeyEvent.KEYCODE_BACK) {
 	    	KP.disconnectSmartSpace();
-	    	connectionState = -1;
+	    	connectionState = 0;
 	    }
 	    return super.onKeyDown(keyCode, event);
 	}

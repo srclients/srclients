@@ -10,7 +10,11 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.RelativeLayout;
 import android.graphics.drawable.Drawable;
-import java.lang.Runnable;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
+import android.content.Intent;
+import android.content.Context;
 
 import java.io.InputStream;
 import java.lang.Thread;
@@ -23,18 +27,13 @@ import java.net.URL;
 public class Projector extends Activity 
 	implements View.OnClickListener {
 	
-	/** The Constant IDM_SERVICES. */
 	private static final int IDM_SERVICES = 100;
-	
-	/** The Constant IDM_SETTINGS. */
 	private static final int IDM_SETTINGS = 101;
-	
 	private static final int IDM_REFRESH = 102;
+	private static final int IDM_END_PRESENTATION = 103;
+	private static final int IDM_MIC_SERVICE = 104;
 	
 	public static int projectorCreated = 0;
-	
-	/** The this object. */
-	Projector thisObject = this;
 
 	/** The linear layout. */
 	RelativeLayout linearLayout;
@@ -46,7 +45,7 @@ public class Projector extends Activity
 	ImageView rightArrowBtn;
 	
 	/** The pause btn. */
-	ImageView pauseBtn;
+	ImageView stopBtn;
 	
 	/** The presentation image. */
 	ImageView presentationImage;
@@ -61,11 +60,20 @@ public class Projector extends Activity
 	String slideImageLink;
 	
 	/** The slide number. */
-	public static int slideNumber = 1;
+	int slideNumber;
 	
 	/** The slide count. */
 	int slideCount;
 	
+	Handler uiHandler;
+	
+	Message msg;
+	
+	boolean micServiceStarted = false;
+	
+	Context context;
+	
+	public boolean isSpeaker = false;
 	
 	/**
 	 * Instantiates a new projector.
@@ -73,23 +81,10 @@ public class Projector extends Activity
 	 * @throws InterruptedException the interrupted exception
 	 */
 	public Projector() throws InterruptedException {
-		if(KP.loadPresentation("", this) != 0) {
+		if(KP.loadPresentation(this) != 0) {
 			Log.i("Projector GUI", "Projector init fail");
 			return;
 		}
-		
-		slideImageLink = slideImageLink.replace("127.0.0.1", KP.ip);
-		//Log.i("imageLink:", slideImageLink);
-		
-		Thread thread = new Thread() {
-			@Override
-			public void run() {
-				slideImageDrawable = loadImage(slideImageLink);				
-			};
-		};
-		
-		thread.start();
-		thread.join();
 	}
 	
 	/* (non-Javadoc)
@@ -99,21 +94,49 @@ public class Projector extends Activity
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.projector_interface);
 		
+		slideImageLink = slideImageLink.replace("127.0.0.1", KP.ip);
+		
+		Thread thread = new Thread() {
+			@Override
+			public void run() {
+				slideImageDrawable = loadImage(slideImageLink);				
+			};
+		};
+		
+		thread.start();
+		try {
+			thread.join();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		
 		linearLayout = (RelativeLayout) findViewById (R.id.presMenu);
-		linearLayout.setVisibility(RelativeLayout.INVISIBLE);
 		
 		leftArrowBtn = (ImageView) findViewById (R.id.btnBack);
 		leftArrowBtn.setOnClickListener(this);
 		rightArrowBtn = (ImageView) findViewById (R.id.btnForward);
 		rightArrowBtn.setOnClickListener(this);
-		pauseBtn = (ImageView) findViewById (R.id.btnPause);
+		stopBtn = (ImageView) findViewById (R.id.btnStop);
+		stopBtn.setOnClickListener(this);
 		
 		presentationImage = (ImageView) findViewById (R.id.presImage);
 		presentationImage.setImageDrawable(slideImageDrawable);
 		presentationImage.setOnClickListener(this);
 		
+		if(!KP.isSpectator)
+			isSpeaker = KP.checkSpeakerState();
+		
+		if(!isSpeaker) {
+			linearLayout.setVisibility(RelativeLayout.INVISIBLE);
+			presentationImage.setClickable(false);
+		} else {
+			linearLayout.setVisibility(RelativeLayout.VISIBLE);
+			presentationImage.setClickable(true);
+		}
+		
 		layoutIsActive = false;
 		projectorCreated = 1;
+		//context = Context();
 	}
 	
 	
@@ -134,11 +157,16 @@ public class Projector extends Activity
 				break;
 				
 			case R.id.btnForward:
-				nextSlide();
+				if(nextSlide() != 0)
+					Log.e("Projector", "NEXT SLIDE error");
 				break;
 				
 			case R.id.btnBack:
 				previousSlide();
+				break;
+				
+			case R.id.btnStop:
+				endPresentation();
 				break;
 		}
 	}
@@ -156,7 +184,7 @@ public class Projector extends Activity
 		
 		try {			
 			InputStream is = (InputStream) new URL(link).getContent();
-			imgDrawable = Drawable.createFromStream(is, "avatar");
+			imgDrawable = Drawable.createFromStream(is, null);
 			
 			if(imgDrawable == null) {
 				Log.e("Java projector", "imgDrawable = null");
@@ -171,28 +199,6 @@ public class Projector extends Activity
 		return imgDrawable;
 	}
 	
-	/**
-	 * Sets the image link.
-	 *
-	 * @param link the new image link
-	 */
-	public void setImageLink(String link) {
-		slideImageLink = link;
-	}
-	
-	/**
-	 * @brief Initialize projector when `startConference` received
-	 * 
-	 * @param imgLink
-	 * @param slideNumber
-	 * @param slideCount
-	 */
-	public void loadProjector(String imgLink, /*int slideNumber,*/ int slideCount) {
-		slideImageLink = imgLink;
-		//this.slideNumber = slideNumber;
-		this.slideCount = slideCount;  
-	}
-	
 	/* (non-Javadoc)
 	 * @see android.app.Activity#onCreateOptionsMenu(android.view.Menu)
 	 */
@@ -201,6 +207,7 @@ public class Projector extends Activity
 		menu.add(Menu.NONE, IDM_SERVICES, Menu.NONE, R.string.menu_services);
 		menu.add(Menu.NONE, IDM_SETTINGS, Menu.NONE, R.string.menu_settings);
 		menu.add(Menu.NONE, IDM_REFRESH, Menu.NONE, R.string.menu_refresh);
+		menu.add(Menu.NONE, IDM_END_PRESENTATION, Menu.NONE, R.string.menu_endPresentation);
 		
 		return super.onCreateOptionsMenu(menu);
 	}
@@ -229,6 +236,17 @@ public class Projector extends Activity
 					e.printStackTrace();
 				}
 				break;
+				
+			case IDM_END_PRESENTATION:
+				endPresentation();
+				break;
+				
+			case IDM_MIC_SERVICE:
+				/*if(!micServiceStarted) {
+					Intent intent = new Intent(context, MicService.class);
+					
+				}*/
+				break;
 		}
 		
 		return super.onOptionsItemSelected(item);
@@ -237,11 +255,7 @@ public class Projector extends Activity
 	public int updateProjector() throws InterruptedException {
 		Log.i("Projector", "update start");
 		
-		if(KP.loadPresentation("", this) == -1)
-			return -1;
-		
 		slideImageLink = slideImageLink.replace("127.0.0.1", KP.ip);
-		//Log.i("imageLink:", slideImageLink);
 		
 		Thread thread = new Thread() {
 			@Override
@@ -253,14 +267,25 @@ public class Projector extends Activity
 		thread.start();
 		thread.join();
 		
-		runOnUiThread(new Runnable() {
+		uiHandler = new Handler(Looper.getMainLooper()) {
 			@Override
-			public void run() {
+			public void handleMessage(Message inMsg) {
 				presentationImage.setImageDrawable(slideImageDrawable);
 				presentationImage.invalidate();
-			};
-			
-		});
+				
+				if(!isSpeaker) {
+					linearLayout.setVisibility(RelativeLayout.INVISIBLE);
+					linearLayout.setClickable(false);
+				} else {
+					linearLayout.setVisibility(RelativeLayout.VISIBLE);
+					linearLayout.setClickable(true);
+				}
+			}
+		};
+		
+		msg = new Message();
+		msg.setTarget(uiHandler);
+		msg.sendToTarget();
 		
 		Log.i("Projector", "update DONE");
 		
@@ -268,22 +293,35 @@ public class Projector extends Activity
 	}
 	
 	public int nextSlide() {
-		Log.i("slide number", String.valueOf(slideNumber));
-		if(slideNumber == 15)
-			slideNumber = 0;
-		
-		if(KP.showSlide(slideNumber + 1) == -1)
-			return -1;
-		
-		++slideNumber;
+		Log.i("Current slide number", String.valueOf(slideNumber));
+		if(slideNumber < slideCount)
+			return KP.showSlide(slideNumber + 1);
+
 		return 0;
 	}
 	
 	public int previousSlide() {
-		Log.i("slide number", String.valueOf(slideNumber));
+		Log.i("Current slide number", String.valueOf(slideNumber));
 		if(slideNumber > 1)
-			return KP.showSlide(--slideNumber);
+			return KP.showSlide(slideNumber - 1);
 		
-		return -1;
+		return 0;
+	}
+	
+	public int endPresentation() {
+		return KP.endPresentation();
+	}
+	
+	public void setSlideNumber(String number) {
+		slideNumber = Integer.parseInt(number);
+	}
+	
+	public void setSlideCount(String count) {
+		slideCount = Integer.parseInt(count);
+	}
+	
+	public void setSlideImage(String link) throws InterruptedException {
+		slideImageLink = link;
+		updateProjector();
 	}
 }

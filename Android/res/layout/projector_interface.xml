@@ -16,7 +16,6 @@
         android:layout_alignParentBottom="true"
         android:layout_width="fill_parent"
         android:layout_height="65sp"
-        android:clickable="true"
         android:background="@color/gray">
     
         <ImageView
@@ -27,11 +26,11 @@
         	android:src="@drawable/left_arrow"/>
         
         <ImageView
-        	android:id="@+id/btnPause"
+        	android:id="@+id/btnStop"
         	android:layout_width="wrap_content"
         	android:layout_height="wrap_content"
         	android:layout_centerHorizontal="true"
-        	android:src="@drawable/pause_128"/>
+        	android:src="@drawable/stop"/>
         
         <ImageView
         	android:id="@+id/btnForward"

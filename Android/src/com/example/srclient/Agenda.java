@@ -5,14 +5,18 @@ import android.os.Bundle;
 import android.widget.ListAdapter;
 import android.widget.SimpleAdapter;
 import android.widget.Toast;
+import android.view.View;
 
 import java.util.ArrayList;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.content.Intent;
 import java.io.InputStream;
 import java.net.URL;
+
+import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import java.lang.Thread;
 import android.content.Context;
@@ -50,19 +54,7 @@ public class Agenda extends ListActivity {
 	 *
 	 * @throws InterruptedException the interrupted exception
 	 */
-	public Agenda() throws InterruptedException {		
-		/*
-		Thread t = new Thread() {
-			@Override
-			public void run() {
-				imgDefault = loadImage(absentImg);				
-			};
-		};
-		
-		t.start();
-		t.join();
-		*/
-	}
+	public Agenda() { }
 	
 	/* (non-Javadoc)
 	 * @see android.app.Activity#onCreate(android.os.Bundle)
@@ -73,7 +65,7 @@ public class Agenda extends ListActivity {
 		
 		imgDefault = this.getResources().getDrawable(R.drawable.user);
 		
-		prepareAgendaDate();
+		prepareAgendaData();
         
 		adapter = new SimpleAdapter(
         		this, list, R.layout.agenda_interface, 
@@ -84,6 +76,9 @@ public class Agenda extends ListActivity {
 
 		((SimpleAdapter) adapter).setViewBinder(new AgendaViewBinder());
 		setListAdapter(adapter);
+		
+		//setCurrentTimeslot(KP.getCurrentTimeslotIndex());
+		
 		agendaCreated = 1;
 	}
 	
@@ -121,7 +116,6 @@ public class Agenda extends ListActivity {
 	}
 	
 	
-	/* Loads image by url */
 	/**
 	 * Load image.
 	 *
@@ -157,10 +151,10 @@ public class Agenda extends ListActivity {
 		menu.add(Menu.NONE, IDM_SERVICES, Menu.NONE, R.string.menu_services);
 		//menu.add(Menu.NONE, IDM_SETTINGS, Menu.NONE, R.string.menu_settings);
 		
-		if(KP.isChairman) {
+		//if(KP.isChairman) {
 			menu.add(Menu.NONE, IDM_STARTCONFERENCE, Menu.NONE, R.string.startConference);
 			menu.add(Menu.NONE, IDM_ENDCONFERENCE, Menu.NONE, R.string.endConference);
-		}
+		//}
 		
 		return super.onCreateOptionsMenu(menu);
 	}
@@ -185,11 +179,13 @@ public class Agenda extends ListActivity {
 			case IDM_STARTCONFERENCE:
 				if(startConference() == -1)
 					Toast.makeText(this, "Start conference failed", Toast.LENGTH_SHORT).show();
+				item.setEnabled(false);
 				break;
 				
 			case IDM_ENDCONFERENCE:
 				if(endConference() == -1)
 					Toast.makeText(this, "End conference failed", Toast.LENGTH_SHORT).show();
+				item.setEnabled(false);
 				break;
 		}
 		
@@ -197,6 +193,7 @@ public class Agenda extends ListActivity {
 	}
 	
 	public void updateAgenda() {
+		agendaCreated = 0;
 		Intent restartIntent = getIntent();
 		finish();
 		startActivity(restartIntent);
@@ -216,25 +213,16 @@ public class Agenda extends ListActivity {
 		startActivity(intent);
 	}
 	
-	public int prepareAgendaDate() {
+	public int prepareAgendaData() {
 		ArrayList<Timeslot> list_tmp = new ArrayList<Timeslot>();
 		
 		list = new ArrayList<Timeslot>();
 		
 		if(connectionState == 0) {
-			
 			if(KP.loadTimeslotList(this) == -1) {
 				Log.i("Agenda GUI", "Fill agenda fail");
 				finish();
 				return -1;
-			}
-			
-			list_tmp = (ArrayList<Timeslot>)list.clone();
-			list.clear();
-			
-			/* Reverse timeslot list */
-			for(int i = list_tmp.size() - 1; i >= 0; i--) {
-				list.add(new Timeslot(list_tmp.get(i)));
 			}
 		}
 		
@@ -242,4 +230,26 @@ public class Agenda extends ListActivity {
 		
 		return 0;
 	}
+	
+	@Override
+	public boolean onKeyDown(int keyCode, KeyEvent event)  {
+	    if (keyCode == KeyEvent.KEYCODE_BACK) {
+	    	//KP.disconnectSmartSpace();
+	    	//connectionState = -1;
+	    	finish();
+	    }
+	    return super.onKeyDown(keyCode, event);
+	}
+	
+	/*
+	public void setCurrentTimeslot(int index) {
+		long id = adapter.getItemId(index);
+		View item = (View) findViewById ((int)id);
+		Log.i("currentTimeslot", String.valueOf(index));
+		
+		if(item != null)
+			item.setBackgroundColor(Color.BLUE);
+		else
+			Log.e("setCurTimeslot", "item not found");
+	}*/
 }

@@ -57,7 +57,7 @@ JNIEXPORT jint JNICALL Java_com_example_srclient_KP_userRegistration
  * Signature: ()I
  */
 JNIEXPORT jint JNICALL Java_com_example_srclient_KP_loadPresentation
-  (JNIEnv *, jobject, jstring, jobject);
+  (JNIEnv *, jobject, jobject);
 
 /*
  * Class:     com_example_srclient_KP
@@ -95,10 +95,35 @@ JNIEXPORT void JNICALL Java_com_example_srclient_KP_getProjectorClassObject
 /*
  * Class:     com_example_srclient_KP
  * Method:    showSlide
- * Signature: ()V
+ * Signature: ()I
  */
 JNIEXPORT jint JNICALL Java_com_example_srclient_KP_showSlide
   (JNIEnv *, jclass, jint);
+
+
+/*
+ * Class:     com_example_srclient_KP
+ * Method:    endPresentation
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_com_example_srclient_KP_endPresentation
+  (JNIEnv *, jclass);
+
+/*
+ * Class:     com_example_srclient_KP
+ * Method:    getCurrentTimeslotIndex
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_com_example_srclient_KP_getCurrentTimeslotIndex
+  (JNIEnv *, jclass);
+
+/*
+ * Class:     com_example_srclient_KP
+ * Method:    checkSpeakerState
+ * Signature: ()I
+ */
+JNIEXPORT jboolean JNICALL Java_com_example_srclient_KP_checkSpeakerState
+  (JNIEnv *, jclass);
 
 
 #ifdef __cplusplus
