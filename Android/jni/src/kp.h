@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <jni.h>
+#include <string.h>
 
 #define MAX_CLASS_NAME_LENGTH 20
 #define ERROR_MSG_LENGTH 40

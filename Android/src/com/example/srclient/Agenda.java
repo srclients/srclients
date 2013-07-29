@@ -6,13 +6,14 @@ import android.widget.ListAdapter;
 import android.widget.SimpleAdapter;
 import android.widget.Toast;
 import android.view.View;
-
 import java.util.ArrayList;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.content.Intent;
+import android.content.SharedPreferences;
+
 import java.io.InputStream;
 import java.net.URL;
 
@@ -35,18 +36,13 @@ public class Agenda extends ListActivity {
 	
 	public static int agendaCreated = 0;
 	
-	/** The list. */
-	private ArrayList<Timeslot> list;
+	private static ArrayList<Timeslot> list;
+	private static boolean updated = false;
 	
-	/** The adapter. */
 	private ListAdapter adapter;
 	
 	Drawable imgDefault;
-	
-	/** The absent img. */
 	String absentImg = "absentImage";
-	
-	/** The connection state. */
 	int connectionState = 0;
 	
 	/**
@@ -59,18 +55,22 @@ public class Agenda extends ListActivity {
 	/* (non-Javadoc)
 	 * @see android.app.Activity#onCreate(android.os.Bundle)
 	 */
+	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
 		imgDefault = this.getResources().getDrawable(R.drawable.user);
 		
-		prepareAgendaData();
+		if(savedInstanceState == null || updated) {
+			updated = false;
+			prepareAgendaData();
+		}
         
 		adapter = new SimpleAdapter(
         		this, list, R.layout.agenda_interface, 
         		new String[] {Timeslot.NAME, Timeslot.TITLE, 
-        				Timeslot.DURATION, Timeslot.IMG}, 
+        				Timeslot.DURATION, Timeslot.IMG},
         		new int[] {R.id.speakerName, R.id.presentationTitle, 
         				R.id.duration, R.id.avatar});
 
@@ -100,19 +100,19 @@ public class Agenda extends ListActivity {
 			Thread t = new Thread() {
 					@Override
 					public void run() {
-						synchronized(list) {
+						//synchronized(list) {
 							Drawable imgAvatar = loadImage(img);
 							list.add(new Timeslot(name, duration, title, imgAvatar));
-						}
+						//}
 					};
 			};
 			t.start();
 			t.join();
 			
 		} else
-			synchronized(list) {
+			//synchronized(list) {
 				list.add(new Timeslot(name, duration, title, imgDefault));
-			}
+			//}
 	}
 	
 	
@@ -124,6 +124,7 @@ public class Agenda extends ListActivity {
 	 */
 	synchronized public Drawable loadImage(String link) {
 		Drawable imgDrawable = null;
+		Log.i("loadImage", link);
 
 		try {			
 			InputStream is = (InputStream) new URL(link).getContent();
@@ -177,13 +178,13 @@ public class Agenda extends ListActivity {
 				break;
 				
 			case IDM_STARTCONFERENCE:
-				if(startConference() == -1)
+				if(startConference() != 0)
 					Toast.makeText(this, "Start conference failed", Toast.LENGTH_SHORT).show();
 				item.setEnabled(false);
 				break;
 				
 			case IDM_ENDCONFERENCE:
-				if(endConference() == -1)
+				if(endConference() != 0)
 					Toast.makeText(this, "End conference failed", Toast.LENGTH_SHORT).show();
 				item.setEnabled(false);
 				break;
@@ -194,6 +195,7 @@ public class Agenda extends ListActivity {
 	
 	public void updateAgenda() {
 		agendaCreated = 0;
+		updated = true;
 		Intent restartIntent = getIntent();
 		finish();
 		startActivity(restartIntent);
@@ -214,8 +216,6 @@ public class Agenda extends ListActivity {
 	}
 	
 	public int prepareAgendaData() {
-		ArrayList<Timeslot> list_tmp = new ArrayList<Timeslot>();
-		
 		list = new ArrayList<Timeslot>();
 		
 		if(connectionState == 0) {
@@ -233,11 +233,11 @@ public class Agenda extends ListActivity {
 	
 	@Override
 	public boolean onKeyDown(int keyCode, KeyEvent event)  {
-	    if (keyCode == KeyEvent.KEYCODE_BACK) {
+	    //if (keyCode == KeyEvent.KEYCODE_BACK) {
 	    	//KP.disconnectSmartSpace();
 	    	//connectionState = -1;
-	    	finish();
-	    }
+	    	//finish();
+	    //}
 	    return super.onKeyDown(keyCode, event);
 	}
 	

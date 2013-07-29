@@ -215,6 +215,10 @@ public class KP extends Activity
 						return;
 					}
 					Log.i("Connection", "DONE");
+					
+					if(initSubscription() != 0)
+						Log.e("Java KP", "Init subscription failed");
+					Log.i("InitSbcr", "DONE");
 
 					if(!chBoxAnonim.isChecked()) {
 						if(userRegistration(name, password) == 0) {
@@ -230,13 +234,15 @@ public class KP extends Activity
 						isSpectator = true;
 					
 					Log.i("Registration", "DONE");
-
-					if(initSubscription() != 0)
-						Log.e("Java KP", "Init subscription failed");
-					Log.i("InitSbcr", "DONE");
 					
 				} else
 					Toast.makeText(this, "You are already connected", Toast.LENGTH_SHORT).show();
+
+				try {
+				    Thread.sleep(400);
+				} catch(InterruptedException ex) {
+				    Thread.currentThread().interrupt();
+				}
 				
 				loadAgenda();
 				break;
