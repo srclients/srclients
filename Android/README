@@ -1,0 +1,16 @@
+Client runs on end-user mobile device (smartphone), shares personal conference-related information in the SmartRoom space and accesses appropriate services. For the current speaker the client interacts with the Projector service controlling the presentation and slide show. In parallel, clients of other participants access informational services of this conference.
+
+Android platform provides all necessary libraries and technologies for Smart Room client realisation. The client logic is implemented on Java and C languages with using SmartSlog ontology library. GUI is based on XML and supports various screen sizes of mobile devices.
+
+The following functions (services) are supported: 
+	- authorization using login and password
+	- speaker mode: control of slide show during the talk
+	- list of presenters and presentations: based on the recent agenda
+	- local slide show of a presentation
+
+-------------
+Installation
+-------------
+1. First of all you must enable the loading of apps from unknown sources. You can do it using sequence 'Settings'->'Applications' and check 'Unknown Sources' box.
+2. Connect your device to PC via USB and transfer 'SRClient.apk' file to device.
+3. You need a file manager (such as Astro) on your device. Browse the 'SRClient.apk' file and tap it so then the apps installer will launch.
