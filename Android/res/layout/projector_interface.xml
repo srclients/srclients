@@ -11,6 +11,15 @@
         android:layout_centerInParent="true"
         android:src="@drawable/pres_example"/>
     
+    <ImageView 
+        android:id="@+id/mic"
+        android:layout_width="100dp"
+	 android:layout_height="100dp"
+	 android:layout_alignParentTop="true"
+	 android:layout_alignParentRight="true"
+	 android:padding="10dp"
+     	 android:src="@drawable/inactive_mic"/>
+           
     <RelativeLayout
         android:id="@+id/presMenu"
         android:layout_alignParentBottom="true"

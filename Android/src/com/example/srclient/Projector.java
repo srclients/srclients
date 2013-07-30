@@ -52,6 +52,8 @@ public class Projector extends Activity
 	/** The presentation image. */
 	ImageView presentationImage;
 	
+	ImageView microphoneBtn;
+	
 	/** The slide image drawable. */
 	Drawable slideImageDrawable;
 	
@@ -76,6 +78,8 @@ public class Projector extends Activity
 	Context context;
 	
 	public boolean isSpeaker = false;
+	
+	boolean micIsActive = false;
 	
 	/**
 	 * Instantiates a new projector.
@@ -127,6 +131,9 @@ public class Projector extends Activity
 		stopBtn = (ImageView) findViewById (R.id.btnStop);
 		stopBtn.setOnClickListener(this);
 		
+		microphoneBtn = (ImageView) findViewById (R.id.mic);
+		microphoneBtn.setOnClickListener(this);
+		
 		presentationImage = (ImageView) findViewById (R.id.presImage);
 		presentationImage.setImageDrawable(slideImageDrawable);
 		presentationImage.setOnClickListener(this);
@@ -136,9 +143,11 @@ public class Projector extends Activity
 		
 		if(!isSpeaker) {
 			linearLayout.setVisibility(RelativeLayout.INVISIBLE);
+			microphoneBtn.setVisibility(RelativeLayout.INVISIBLE);
 			presentationImage.setClickable(false);
 		} else {
 			linearLayout.setVisibility(RelativeLayout.VISIBLE);
+			microphoneBtn.setVisibility(RelativeLayout.VISIBLE);
 			presentationImage.setClickable(true);
 		}
 		
@@ -175,6 +184,18 @@ public class Projector extends Activity
 				
 			case R.id.btnStop:
 				endPresentation();
+				break;
+				
+			case R.id.mic:
+				if(!micIsActive) {
+					microphoneBtn.setImageResource(R.drawable.start_mic);
+					startService(new Intent(this, MicService.class));
+					micIsActive = true;
+				} else {
+					microphoneBtn.setImageResource(R.drawable.inactive_mic);
+					stopService(new Intent(this, MicService.class));
+					micIsActive = false;
+				}
 				break;
 		}
 	}
@@ -249,13 +270,6 @@ public class Projector extends Activity
 			case IDM_END_PRESENTATION:
 				endPresentation();
 				break;
-				
-			case IDM_MIC_SERVICE:
-				/*if(!micServiceStarted) {
-					Intent intent = new Intent(context, MicService.class);
-					
-				}*/
-				break;
 		}
 		
 		return super.onOptionsItemSelected(item);
@@ -278,6 +292,11 @@ public class Projector extends Activity
 		if(!KP.isSpectator)
 			isSpeaker = KP.checkSpeakerState();
 		
+		if(!isSpeaker && micIsActive) {
+			micIsActive = false;
+			stopService(new Intent(this, MicService.class));
+		}
+		
 		uiHandler = new Handler(Looper.getMainLooper()) {
 			@Override
 			public void handleMessage(Message inMsg) {
@@ -286,9 +305,11 @@ public class Projector extends Activity
 				
 				if(!isSpeaker) {
 					linearLayout.setVisibility(RelativeLayout.INVISIBLE);
+					microphoneBtn.setVisibility(RelativeLayout.INVISIBLE);
 					presentationImage.setClickable(false);
 				} else {
 					linearLayout.setVisibility(RelativeLayout.VISIBLE);
+					microphoneBtn.setVisibility(RelativeLayout.VISIBLE);
 					presentationImage.setClickable(true);
 				}
 			}
