@@ -7,6 +7,7 @@ import android.media.MediaRecorder.AudioSource;
 import android.media.AudioRecord;
 import android.media.AudioFormat;
 import android.util.Log;
+import android.widget.Toast;
 
 import java.io.BufferedOutputStream;
 import java.net.Socket;
@@ -44,7 +45,16 @@ public class MicService extends Service {
 	
 	@Override
 	public void onStart(Intent intent, int startId) {
-		initConnection();
+		
+		if(initConnection() != 0) {
+			Toast.makeText(this, "Mic service is not available", Toast.LENGTH_SHORT).show();
+			
+			Intent recvIntent = new Intent(Projector.BROADCAST_STATUS_SERVICE);
+			recvIntent.putExtra(Projector.SERVICE_STATUS, false);
+			sendBroadcast(recvIntent);
+			
+			stopSelf();
+		}
 		
 		if(mInputData.getState() == AudioRecord.STATE_INITIALIZED) {
 			mActiveMic = true;
@@ -77,6 +87,14 @@ public class MicService extends Service {
 								bufOutStream.write(audioData, 0, bytesRead);
 							} catch(IOException e) {
 								e.printStackTrace();
+								stopRecording();
+								stopSelf();
+								
+								Intent recvIntent = new Intent(Projector.BROADCAST_STATUS_SERVICE);
+								recvIntent.putExtra(Projector.SERVICE_STATUS, false);
+								sendBroadcast(recvIntent);
+								
+								return;
 							} catch(NullPointerException e) {
 								e.printStackTrace();
 							} catch(ArrayIndexOutOfBoundsException e) {
@@ -101,7 +119,10 @@ public class MicService extends Service {
 		
 		try {
 			Thread.sleep(300);
-			bufOutStream.close();
+			
+			if(bufOutStream != null)
+				bufOutStream.close();
+			
 			if(socket.isConnected())
 				socket.close();
 		} catch(IllegalStateException e) {
@@ -129,7 +150,15 @@ public class MicService extends Service {
 			@Override
 			public void run() {
 				try {
-					socket.connect(new InetSocketAddress(KP.ip, 4444));
+					String ip = KP.getMicServiceIP();
+					String port = KP.getMicServicePort();
+
+					if((ip == null) || (port == null)) {
+						return;
+					}
+					
+					if(!socket.isConnected())
+						socket.connect(new InetSocketAddress(ip, Integer.parseInt(port)));
 				} catch(UnknownHostException e) {
 					e.printStackTrace();
 				} catch(IOException e) {
@@ -145,6 +174,10 @@ public class MicService extends Service {
 		
 		try {
 			t.join();
+			
+			if(!socket.isConnected())
+				return -1;
+			
 			bufOutStream = new BufferedOutputStream(socket.getOutputStream());
 		} catch (InterruptedException e) {
 			e.printStackTrace();

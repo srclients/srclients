@@ -125,6 +125,22 @@ JNIEXPORT jint JNICALL Java_com_example_srclient_KP_getCurrentTimeslotIndex
 JNIEXPORT jboolean JNICALL Java_com_example_srclient_KP_checkSpeakerState
   (JNIEnv *, jclass);
 
+/*
+ * Class:     com_example_srclient_KP
+ * Method:    getMicServiceIP
+ * Signature: ()I
+ */
+JNIEXPORT jstring JNICALL Java_com_example_srclient_KP_getMicServiceIP
+  (JNIEnv *, jclass);
+
+/*
+ * Class:     com_example_srclient_KP
+ * Method:    getMicServicePort
+ * Signature: ()I
+ */
+JNIEXPORT jstring JNICALL Java_com_example_srclient_KP_getMicServicePort
+  (JNIEnv *, jclass);
+
 
 #ifdef __cplusplus
 }

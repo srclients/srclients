@@ -1,5 +1,6 @@
 package com.example.srclient;
 
+import android.app.AlertDialog;
 import android.app.ListActivity;
 import android.os.Bundle;
 import android.widget.ListAdapter;
@@ -11,8 +12,10 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.app.AlertDialog.Builder;
 
 import java.io.InputStream;
 import java.net.URL;
@@ -35,6 +38,8 @@ public class Agenda extends ListActivity {
 	private static final int IDM_ENDCONFERENCE = 103;
 	
 	public static int agendaCreated = 0;
+	public static boolean conferenceStarted = false;
+	public static boolean conferenceEnded = false;
 	
 	private static ArrayList<Timeslot> list;
 	private static boolean updated = false;
@@ -43,7 +48,7 @@ public class Agenda extends ListActivity {
 	
 	Drawable imgDefault;
 	String absentImg = "absentImage";
-	int connectionState = 0;
+	//int connectionState = 0;
 	
 	/**
 	 * Instantiates a new agenda.
@@ -152,11 +157,22 @@ public class Agenda extends ListActivity {
 		menu.add(Menu.NONE, IDM_SERVICES, Menu.NONE, R.string.menu_services);
 		//menu.add(Menu.NONE, IDM_SETTINGS, Menu.NONE, R.string.menu_settings);
 		
-		//if(KP.isChairman) {
+		if(KP.isChairman) {
 			menu.add(Menu.NONE, IDM_STARTCONFERENCE, Menu.NONE, R.string.startConference);
 			menu.add(Menu.NONE, IDM_ENDCONFERENCE, Menu.NONE, R.string.endConference);
-		//}
+		}
+		menu.findItem(IDM_ENDCONFERENCE).setEnabled(false);
 		
+		if(conferenceStarted) {
+			menu.findItem(IDM_STARTCONFERENCE).setEnabled(false);
+			menu.findItem(IDM_ENDCONFERENCE).setEnabled(true);
+		
+		} else if(conferenceEnded) {
+			menu.findItem(IDM_STARTCONFERENCE).setEnabled(true);
+			menu.findItem(IDM_ENDCONFERENCE).setEnabled(false);
+		}
+			
+			
 		return super.onCreateOptionsMenu(menu);
 	}
 	
@@ -180,12 +196,14 @@ public class Agenda extends ListActivity {
 			case IDM_STARTCONFERENCE:
 				if(startConference() != 0)
 					Toast.makeText(this, "Start conference failed", Toast.LENGTH_SHORT).show();
+				conferenceStarted = true;
 				item.setEnabled(false);
 				break;
 				
 			case IDM_ENDCONFERENCE:
 				if(endConference() != 0)
 					Toast.makeText(this, "End conference failed", Toast.LENGTH_SHORT).show();
+				conferenceEnded = true;
 				item.setEnabled(false);
 				break;
 		}
@@ -218,27 +236,48 @@ public class Agenda extends ListActivity {
 	public int prepareAgendaData() {
 		list = new ArrayList<Timeslot>();
 		
-		if(connectionState == 0) {
+		//if(connectionState == 0) {
 			if(KP.loadTimeslotList(this) == -1) {
 				Log.i("Agenda GUI", "Fill agenda fail");
 				finish();
 				return -1;
 			}
-		}
+		//}
 		
-		connectionState = 1;
+		//connectionState = 1;
 		
 		return 0;
 	}
 	
 	@Override
 	public boolean onKeyDown(int keyCode, KeyEvent event)  {
-	    //if (keyCode == KeyEvent.KEYCODE_BACK) {
-	    	//KP.disconnectSmartSpace();
-	    	//connectionState = -1;
-	    	//finish();
-	    //}
-	    return super.onKeyDown(keyCode, event);
+		if (keyCode == KeyEvent.KEYCODE_BACK) {
+			AlertDialog.Builder dialog = new AlertDialog.Builder(this);
+			dialog.setTitle(R.string.exitClientTitle);
+			dialog.setMessage(R.string.exitClientQuestion);
+			dialog.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+			
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					agendaCreated = 0;
+					KP.disconnectSmartSpace();
+					KP.connectionState = -1;
+					KP.isRegistered = false;
+					finish();
+				}
+			});
+			
+			dialog.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+				
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					return;
+				}
+			});
+			dialog.show();
+		}
+		
+		return super.onKeyDown(keyCode, event);
 	}
 	
 	/*

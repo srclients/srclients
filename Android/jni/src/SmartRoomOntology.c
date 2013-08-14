@@ -1,7 +1,8 @@
 #include "SmartRoomOntology.h"
 
-
-
+#if INCLUDE_CLASS_MICROPHONESERVICE
+class_t *CLASS_MICROPHONESERVICE;
+#endif
 #if INCLUDE_CLASS_PROFILE
 class_t *CLASS_PROFILE;
 #endif
@@ -96,7 +97,12 @@ class_t *CLASS_SECTION;
 class_t *CLASS_TIMESLOT;
 #endif
 
-
+#if INCLUDE_PROPERTY_PORT
+property_t *PROPERTY_PORT;
+#endif
+#if INCLUDE_PROPERTY_IP
+property_t *PROPERTY_IP;
+#endif
 #if INCLUDE_PROPERTY_HASMAXIMALRANGE
 property_t *PROPERTY_HASMAXIMALRANGE;
 #endif
@@ -318,6 +324,45 @@ property_t *PROPERTY_TEXT;
 void register_ontology()
 {    
     list_t *tmp_node = NULL;    
+
+#if INCLUDE_PROPERTY_PORT
+
+PROPERTY_PORT =  (property_t *) malloc(sizeof(property_t));
+PROPERTY_PORT->name = strdup("http://www.cs.karelia.ru/smartroom#port");
+PROPERTY_PORT->about = strdup("port");
+//PROPERTY_PORT->range = "http://www.w3.org/2001/XMLSchema#string"; //getRange
+PROPERTY_PORT->domain = strdup("http://www.cs.karelia.ru/smartroom#MicrophoneService"); 
+PROPERTY_PORT->maxcardinality = -1;
+PROPERTY_PORT->mincardinality = -1;
+PROPERTY_PORT->subpropertyof = NULL;
+PROPERTY_PORT->oneof = list_get_new_list();  
+PROPERTY_PORT->rtti = RTTI_PROPERTY;
+PROPERTY_PORT->type = DATATYPEPROPERTY;
+
+
+
+sslog_repo_add_entity((void *) PROPERTY_PORT);
+
+#endif
+#if INCLUDE_PROPERTY_IP
+
+PROPERTY_IP =  (property_t *) malloc(sizeof(property_t));
+PROPERTY_IP->name = strdup("http://www.cs.karelia.ru/smartroom#ip");
+PROPERTY_IP->about = strdup("ip");
+//PROPERTY_IP->range = "http://www.w3.org/2001/XMLSchema#string"; //getRange
+PROPERTY_IP->domain = strdup("http://www.cs.karelia.ru/smartroom#MicrophoneService"); 
+PROPERTY_IP->maxcardinality = -1;
+PROPERTY_IP->mincardinality = -1;
+PROPERTY_IP->subpropertyof = NULL;
+PROPERTY_IP->oneof = list_get_new_list();  
+PROPERTY_IP->rtti = RTTI_PROPERTY;
+PROPERTY_IP->type = DATATYPEPROPERTY;
+
+
+
+sslog_repo_add_entity((void *) PROPERTY_IP);
+
+#endif
 
 #if INCLUDE_PROPERTY_HASMAXIMALRANGE
 
@@ -1653,6 +1698,28 @@ sslog_repo_add_entity((void *) PROPERTY_TEXT);
 
 
 
+#if INCLUDE_CLASS_MICROPHONESERVICE
+
+CLASS_MICROPHONESERVICE = (class_t *) malloc(sizeof(class_t));
+CLASS_MICROPHONESERVICE->rtti = RTTI_CLASS;
+CLASS_MICROPHONESERVICE->classtype =  strdup("http://www.cs.karelia.ru/smartroom#MicrophoneService");
+CLASS_MICROPHONESERVICE->properties = list_get_new_list();  
+CLASS_MICROPHONESERVICE->instances = NULL;
+CLASS_MICROPHONESERVICE->superclasses = list_get_new_list();  
+CLASS_MICROPHONESERVICE->oneof = list_get_new_list();  
+
+sslog_repo_add_entity((void *) CLASS_MICROPHONESERVICE);
+
+#if INCLUDE_PROPERTY_IP
+tmp_node = list_get_new_node(PROPERTY_IP);
+list_add_node(tmp_node, CLASS_MICROPHONESERVICE->properties);
+#endif
+#if INCLUDE_PROPERTY_PORT
+tmp_node = list_get_new_node(PROPERTY_PORT);
+list_add_node(tmp_node, CLASS_MICROPHONESERVICE->properties);
+#endif
+
+#endif
 #if INCLUDE_CLASS_PROFILE
 
 CLASS_PROFILE = (class_t *) malloc(sizeof(class_t));
@@ -2007,6 +2074,14 @@ list_add_node(tmp_node, CLASS_NOTHING->properties);
 #endif
 #if INCLUDE_PROPERTY_TITLE
 tmp_node = list_get_new_node(PROPERTY_TITLE);
+list_add_node(tmp_node, CLASS_NOTHING->properties);
+#endif
+#if INCLUDE_PROPERTY_IP
+tmp_node = list_get_new_node(PROPERTY_IP);
+list_add_node(tmp_node, CLASS_NOTHING->properties);
+#endif
+#if INCLUDE_PROPERTY_PORT
+tmp_node = list_get_new_node(PROPERTY_PORT);
 list_add_node(tmp_node, CLASS_NOTHING->properties);
 #endif
 
@@ -3221,7 +3296,36 @@ tmp_node = list_get_new_node(CLASS_THING);
 list_add_node(tmp_node, CLASS_TIMESLOT->superclasses);
 #endif
 #endif
-
+#if INCLUDE_CLASS_MICROPHONESERVICE
+#if INCLUDE_CLASS_THING
+tmp_node = list_get_new_node(CLASS_THING);
+list_add_node(tmp_node, CLASS_MICROPHONESERVICE->superclasses);
+#endif
+#endif
+#if INCLUDE_CLASS_NOTHING
+#if INCLUDE_CLASS_MICROPHONESERVICE
+tmp_node = list_get_new_node(CLASS_MICROPHONESERVICE);
+list_add_node(tmp_node, CLASS_NOTHING->superclasses);
+#endif
+#endif
+#if INCLUDE_CLASS_NOTHING
+#if INCLUDE_CLASS_MICROPHONESERVICE
+tmp_node = list_get_new_node(CLASS_MICROPHONESERVICE);
+list_add_node(tmp_node, CLASS_NOTHING->superclasses);
+#endif
+#endif
+#if INCLUDE_CLASS_MICROPHONESERVICE
+#if INCLUDE_CLASS_SERVICE
+tmp_node = list_get_new_node(CLASS_SERVICE);
+list_add_node(tmp_node, CLASS_MICROPHONESERVICE->superclasses);
+#endif
+#endif
+#if INCLUDE_CLASS_SERVICE
+#if INCLUDE_CLASS_THING
+tmp_node = list_get_new_node(CLASS_THING);
+list_add_node(tmp_node, CLASS_SERVICE->superclasses);
+#endif
+#endif
 
 
 }

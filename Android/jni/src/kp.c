@@ -52,9 +52,43 @@ JNIEXPORT void JNICALL Java_com_example_srclient_KP_disconnectSmartSpace
   (JNIEnv *env, jobject obj) {
 
 	sslog_sbcr_stop_all();
+	logout();
 	sslog_sbcr_unsubscribe_all(true);
 	sslog_ss_leave_session(sslog_get_ss_info());
 	sslog_repo_clean_all();
+}
+
+/**
+ * @brief Logging out user from Smart Space
+ */
+void logout() {
+	prop_val_t *person_prop = sslog_ss_get_property(personProfile, PROPERTY_PERSONINFORMATION);
+	individual_t *person;
+
+	char *online_status = "online";
+	char *offline_status = "offline";
+
+	if(person_prop == NULL)
+		return;
+
+	person = (individual_t *)person_prop->prop_value;
+
+	if(person == NULL)
+		return;
+
+	sslog_ss_update_property(person, PROPERTY_STATUS->name, (void *)online_status,
+			(void *)offline_status);
+
+	individual_t *agendaGui = sslog_new_individual(CLASS_AGENDAGUINOTIFICATION);
+
+	sslog_set_individual_uuid(agendaGui,
+			generateUuid("http://www.cs.karelia.ru/smartroom#Notification"));
+
+	if(sslog_ss_add_property(agendaGui, PROPERTY_UPDATEAGENDA, firstTimeslot) != 0 )
+		return;
+
+	if(sslog_ss_insert_individual(agendaGui) != 0)
+		return;
 }
 
 
@@ -71,23 +105,21 @@ JNIEXPORT void JNICALL Java_com_example_srclient_KP_disconnectSmartSpace
  * @param userName - registered user name
  * @param password - user password
  *
- * @return Returns 0 in success and -1 if failed
+ * @return Returns 0 in success, 1 if username exists and -1 if failed
  */
 JNIEXPORT jint JNICALL Java_com_example_srclient_KP_userRegistration
   (JNIEnv *env, jobject obj, jstring userName, jstring password) {
 
 	list_t* profileList = sslog_ss_get_individual_by_class_all(CLASS_PROFILE);
+	individual_t *profile = NULL;
 	int personFounded = -1;
 
-	if(profileList == NULL) {
-		__android_log_print(ANDROID_LOG_ERROR, "userRegistration():",
-						"Can't find Profile individual");
-		return -1;
-	} else {
+	if(profileList != NULL) {
+
 		list_head_t* pos = NULL;
 		list_for_each(pos, &profileList->links) {
 			list_t* node = list_entry(pos, list_t, links);
-			individual_t* profile = (individual_t*)(node->data);
+			profile = (individual_t*)(node->data);
 			sslog_ss_populate_individual(profile);
 
 
@@ -109,9 +141,94 @@ JNIEXPORT jint JNICALL Java_com_example_srclient_KP_userRegistration
 		}
 	}
 
-	return personFounded;
+	if(usernameExists((*env)->GetStringUTFChars(env, userName, NULL)) == 0)
+		return 1;
+
+	profile = createProfile((*env)->GetStringUTFChars(env, userName, NULL),
+			(*env)->GetStringUTFChars(env, password, NULL));
+
+	if(profile == NULL)
+		return -1;
+
+	if(activatePerson(profile) != 0)
+		return -1;
+
+	return 0;
 }
 
+/**
+ * @brief Creates new profile in Smart Space
+ * @param userName
+ * @param password
+ * @return 0 in success and -1 otherwise
+ */
+individual_t* createProfile(char *username, char *password) {
+
+	individual_t *profile = sslog_new_individual(CLASS_PROFILE);
+
+	sslog_set_individual_uuid(profile, generateUuid("Profile"));
+
+	if(sslog_ss_add_property(profile, PROPERTY_USERNAME, (void *)username) == -1)
+		return NULL;
+
+	if(sslog_ss_add_property(profile, PROPERTY_PASSWORD, (void *)password) == -1)
+		return NULL;
+
+	if(sslog_ss_add_property(profile, PROPERTY_PERSONINFORMATION, createPerson()) == -1)
+			return NULL;
+
+	if(sslog_ss_insert_individual(profile) == -1)
+		return NULL;
+
+	__android_log_print(ANDROID_LOG_INFO, "createProfile()", "Profile created");
+
+	personProfile = profile;
+
+	return profile;
+}
+
+/**
+ * @brief Creates empty individual for person data
+ * @return pointer to individual, NULL otherwise
+ */
+individual_t* createPerson() {
+
+	individual_t *person = sslog_new_individual(CLASS_PERSON);
+
+	if(person == NULL)
+		return NULL;
+
+	sslog_set_individual_uuid(person, generateUuid("Person"));
+
+	return person;
+}
+
+/**
+ * @brief Checks an existence of username in Smart Space
+ *
+ * @param username
+ * @return 0 if exists and -1 otherwise
+ */
+int usernameExists(char *username) {
+	list_t* profileList = sslog_ss_get_individual_by_class_all(CLASS_PROFILE);
+
+	if(profileList != NULL) {
+		list_head_t* pos = NULL;
+		list_for_each(pos, &profileList->links) {
+			list_t* node = list_entry(pos, list_t, links);
+			individual_t* profile = (individual_t*)(node->data);
+			sslog_ss_populate_individual(profile);
+
+			prop_val_t *login = sslog_ss_get_property(profile, PROPERTY_USERNAME);
+
+			if(login != NULL)
+				if(strcmp(username, (char *)login->prop_value) == 0)
+					return 0;
+		}
+	}
+
+	return -1;
+}
 
 /**
  * @fn  searchPerson(individual_t *person, char *userName, char *password)
@@ -124,28 +241,24 @@ JNIEXPORT jint JNICALL Java_com_example_srclient_KP_userRegistration
  *
  * @return Returns 0 in success and -1 if failed
  */
-int searchPerson(individual_t *person, char *userName, char *password) {
+int searchPerson(individual_t *profile, char *userName, char *password) {
 
-	prop_val_t *p_val_username = sslog_ss_get_property (person, PROPERTY_USERNAME);
+	prop_val_t *p_val_username = sslog_ss_get_property (profile, PROPERTY_USERNAME);
 
-	if(p_val_username == NULL) {
-		__android_log_print(ANDROID_LOG_ERROR, "class KP", "Property user name not found");
-		p_val_username = initNullProperty();
-	}
+	if(p_val_username == NULL)
+		return -1;
 
-	prop_val_t *p_val_password = sslog_ss_get_property (person, PROPERTY_PASSWORD);
+	prop_val_t *p_val_password = sslog_ss_get_property (profile, PROPERTY_PASSWORD);
 
-	if(p_val_password == NULL) {
-		__android_log_print(ANDROID_LOG_ERROR, "class KP", "Property password not found");
-		p_val_password = initNullProperty();
-	}
+	if(p_val_password == NULL)
+		return -1;
 
 	if((strcmp(userName, (char *)p_val_username->prop_value) == 0) &&
 			(strcmp(password, (char *)p_val_password->prop_value) == 0)) {
-		personProfile = person;
+		personProfile = profile;
+
 		return 0;
 	}
-
 
 	return -1;
 }
@@ -165,23 +278,34 @@ int searchPerson(individual_t *person, char *userName, char *password) {
  */
 int activatePerson(individual_t *profile) {
 
+	char *online_status = "online";
+	char *offline_status = "offline";
+
 	prop_val_t *person_prop = sslog_ss_get_property(profile, PROPERTY_PERSONINFORMATION);
 
-	individual_t *person = (individual_t *)person_prop->prop_value;
+	individual_t *person;
+
+	if(person_prop == NULL)
+		return -1;
+
+	person = (individual_t *)person_prop->prop_value;
 
 	sslog_ss_populate_individual(person);
 
-	if(person == NULL) {
-		__android_log_print(ANDROID_LOG_ERROR, "userRegistration()",
-										"person == NULL");
+	if(person == NULL)
 		return -1;
-	}
 
-	char *status = "online";
+	// if property does not exists
+	if(sslog_ss_get_property(person, PROPERTY_STATUS) == NULL) {
 
-	if(sslog_ss_add_property(person, PROPERTY_STATUS, (void *)status) != 0 ) {
-		__android_log_print(ANDROID_LOG_ERROR, "class KP", get_error_text());
-		return -1;
+		if(sslog_ss_add_property(person, PROPERTY_STATUS, (void *)online_status) != 0) {
+			__android_log_print(ANDROID_LOG_ERROR, "class KP", get_error_text());
+			return -1;
+		}
+
+	} else {
+		sslog_ss_update_property(person, PROPERTY_STATUS->name, (void *)offline_status,
+				(void *)online_status);
 	}
 
 	individual_t *agendaGui = sslog_new_individual(CLASS_AGENDANOTIFICATION);
@@ -750,7 +874,7 @@ JNIEXPORT jint JNICALL Java_com_example_srclient_KP_loadPresentation
 	__android_log_print(ANDROID_LOG_ERROR, "loadPresentation()", "DONE");
 
 	return 0;
-}/* Loads presentation with `uuid` */
+}
 
 
 
@@ -1046,4 +1170,52 @@ JNIEXPORT jint JNICALL Java_com_example_srclient_KP_endPresentation
 	//}
 
 	return 0;
+}
+
+JNIEXPORT jstring JNICALL Java_com_example_srclient_KP_getMicServiceIP
+  (JNIEnv *env, jclass clazz) {
+
+	list_t *list = sslog_ss_get_individual_by_class_all(CLASS_MICROPHONESERVICE);
+	individual_t *individual;
+
+	if(list != NULL) {
+		list_head_t* pos = NULL;
+		list_for_each(pos, &list->links) {
+			list_t* node = list_entry(pos, list_t, links);
+			individual = (individual_t*)(node->data);
+			sslog_ss_populate_individual(individual);
+		}
+	} else
+		return NULL;
+
+	prop_val_t *ip_value = sslog_ss_get_property(individual, PROPERTY_IP);
+
+	if(ip_value == NULL)
+		return NULL;
+
+	return (*env)->NewStringUTF(env, (char *)ip_value->prop_value);
+}
+
+JNIEXPORT jstring JNICALL Java_com_example_srclient_KP_getMicServicePort
+  (JNIEnv *env, jclass clazz) {
+
+	list_t *list = sslog_ss_get_individual_by_class_all(CLASS_MICROPHONESERVICE);
+	individual_t *individual;
+
+	if(list != NULL) {
+		list_head_t* pos = NULL;
+		list_for_each(pos, &list->links) {
+			list_t* node = list_entry(pos, list_t, links);
+			individual = (individual_t*)(node->data);
+			sslog_ss_populate_individual(individual);
+		}
+	} else
+		return NULL;
+
+	prop_val_t *port_value = sslog_ss_get_property(individual, PROPERTY_PORT);
+
+	if(port_value == NULL)
+		return NULL;
+
+	return (*env)->NewStringUTF(env, (char *)port_value->prop_value);
 }

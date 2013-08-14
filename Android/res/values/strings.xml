@@ -5,7 +5,7 @@
     <string name="action_settings">Settings</string>
     <string name="sr_client">SR-client</string>
     <string name="ssIP">IP: </string>
-    <string name="participantName">Name: </string>
+    <string name="participantLogin">Login: </string>
     <string name="participantEmail">Email: </string>
     <string name="participantPhone">Phone: </string>
     <string name="participantPassword">Password: </string>
@@ -23,5 +23,7 @@
     <string name="anonim">Sign as a spectator</string>
     <string name="startConference">Start conference</string>
     <string name="endConference">End conference</string>
+    <string name="exitClientTitle">Exit client</string>
+    <string name="exitClientQuestion">Do you really want to quit from client?</string>
 
 </resources>

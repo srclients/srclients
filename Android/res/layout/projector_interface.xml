@@ -2,7 +2,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    android:orientation="vertical" >
+    android:orientation="vertical"
+    tools:context=".Agenda" >
 
     <ImageView
         android:id="@+id/presImage"
@@ -19,6 +20,15 @@
 	 android:layout_alignParentRight="true"
 	 android:padding="10dp"
      	 android:src="@drawable/inactive_mic"/>
+    
+    <ImageView 
+        android:id="@+id/refresh"
+        android:layout_width="100dp"
+	 android:layout_height="100dp"
+	 android:layout_alignParentTop="true"
+	 android:layout_alignParentLeft="true"
+	 android:padding="10dp"
+     	 android:src="@drawable/refresh"/>
            
     <RelativeLayout
         android:id="@+id/presMenu"

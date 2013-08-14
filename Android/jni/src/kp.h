@@ -37,6 +37,9 @@ int activatePerson(individual_t *);
 void subscriptionHandler(subscription_t *);
 void projectorNotificationHandler(subscription_t *);
 void agendaNotificationHandler(subscription_t *);
+individual_t * createProfile(char *, char *);
+individual_t* createPerson();
+void logout();
 
 
 #endif

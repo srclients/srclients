@@ -2,6 +2,8 @@ package com.example.srclient;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.widget.ImageView;
 import android.util.Log;
@@ -13,16 +15,15 @@ import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
-import android.content.Intent;
 import android.content.Context;
 import java.net.URLConnection;
+import android.content.BroadcastReceiver;
 
 import java.io.BufferedInputStream;
 import java.io.InputStream;
 import java.lang.Thread;
 import java.net.URL;
 
-// TODO: Auto-generated Javadoc
 /**
  * The Class Projector.
  */
@@ -31,9 +32,10 @@ public class Projector extends Activity
 	
 	private static final int IDM_SERVICES = 100;
 	private static final int IDM_SETTINGS = 101;
-	private static final int IDM_REFRESH = 102;
-	private static final int IDM_END_PRESENTATION = 103;
-	private static final int IDM_MIC_SERVICE = 104;
+	private static final int IDM_END_PRESENTATION = 102;
+	
+	public static final String BROADCAST_STATUS_SERVICE = "com.example.srclient.stopMicService";
+	public static final String SERVICE_STATUS = "status";
 	
 	public static int projectorCreated = 0;
 
@@ -53,6 +55,8 @@ public class Projector extends Activity
 	ImageView presentationImage;
 	
 	ImageView microphoneBtn;
+	
+	ImageView resfreshBtn;
 	
 	/** The slide image drawable. */
 	Drawable slideImageDrawable;
@@ -79,7 +83,9 @@ public class Projector extends Activity
 	
 	public boolean isSpeaker = false;
 	
-	boolean micIsActive = false;
+	public static boolean micIsActive = false;
+	
+	public BroadcastReceiver bcReceiver;
 	
 	/**
 	 * Instantiates a new projector.
@@ -93,8 +99,24 @@ public class Projector extends Activity
 		}
 	}
 	
-	public void onPause() {
+	@Override
+	protected void onResume() {
+		super.onResume();
+		SharedPreferences prefs = getSharedPreferences("srclient_conf", Context.MODE_PRIVATE);
+		
+		micIsActive = prefs.getBoolean("micIsActive", false);
+		if(micIsActive)
+			microphoneBtn.setImageResource(R.drawable.start_mic);
+	}
+	
+	@Override
+	protected void onPause() {
 		super.onPause();
+		SharedPreferences prefs = getSharedPreferences("srclient_conf", Context.MODE_PRIVATE);
+		SharedPreferences.Editor editor = prefs.edit();
+		
+		editor.putBoolean("micIsActive", micIsActive);
+		editor.commit();
 		
 		projectorCreated = 0;
 	}
@@ -134,6 +156,9 @@ public class Projector extends Activity
 		microphoneBtn = (ImageView) findViewById (R.id.mic);
 		microphoneBtn.setOnClickListener(this);
 		
+		resfreshBtn = (ImageView) findViewById (R.id.refresh);
+		resfreshBtn.setOnClickListener(this);
+		
 		presentationImage = (ImageView) findViewById (R.id.presImage);
 		presentationImage.setImageDrawable(slideImageDrawable);
 		presentationImage.setOnClickListener(this);
@@ -145,15 +170,37 @@ public class Projector extends Activity
 			linearLayout.setVisibility(RelativeLayout.INVISIBLE);
 			microphoneBtn.setVisibility(RelativeLayout.INVISIBLE);
 			presentationImage.setClickable(false);
-		} else {
+		} else if(isSpeaker || KP.isChairman) {
 			linearLayout.setVisibility(RelativeLayout.VISIBLE);
 			microphoneBtn.setVisibility(RelativeLayout.VISIBLE);
 			presentationImage.setClickable(true);
 		}
 		
+		// Registering receiver for changing mic picture
+		// if service is not available or stopped
+		bcReceiver = new BroadcastReceiver() {
+			public void onReceive(Context context, Intent intent) {
+				boolean status = intent.getBooleanExtra(SERVICE_STATUS, false);
+				
+				if(!status) {
+					microphoneBtn.setImageResource(R.drawable.inactive_mic);
+					micIsActive = false;
+				}
+			}
+		};
+		
+		IntentFilter filter = new IntentFilter(BROADCAST_STATUS_SERVICE);
+		registerReceiver(bcReceiver, filter);
+		
 		layoutIsActive = false;
 		projectorCreated = 1;
-		//context = Context();
+	}
+	
+	@Override
+	public void onDestroy() {
+		super.onDestroy();
+		
+		unregisterReceiver(bcReceiver);
 	}
 	
 	
@@ -197,6 +244,15 @@ public class Projector extends Activity
 					micIsActive = false;
 				}
 				break;
+				
+			case R.id.refresh:
+				try {
+					KP.loadPresentation(this);
+					updateProjector();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				break;
 		}
 	}
 	
@@ -235,7 +291,6 @@ public class Projector extends Activity
 	public boolean onCreateOptionsMenu(Menu menu) {
 		menu.add(Menu.NONE, IDM_SERVICES, Menu.NONE, R.string.menu_services);
 		menu.add(Menu.NONE, IDM_SETTINGS, Menu.NONE, R.string.menu_settings);
-		menu.add(Menu.NONE, IDM_REFRESH, Menu.NONE, R.string.menu_refresh);
 		menu.add(Menu.NONE, IDM_END_PRESENTATION, Menu.NONE, R.string.menu_endPresentation);
 		
 		return super.onCreateOptionsMenu(menu);
@@ -256,15 +311,6 @@ public class Projector extends Activity
 				break;
 			
 			case IDM_SETTINGS:
-				break;
-				
-			case IDM_REFRESH:
-				try {
-					KP.loadPresentation(this);
-					updateProjector();
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
 				break;
 				
 			case IDM_END_PRESENTATION:
@@ -307,7 +353,7 @@ public class Projector extends Activity
 					linearLayout.setVisibility(RelativeLayout.INVISIBLE);
 					microphoneBtn.setVisibility(RelativeLayout.INVISIBLE);
 					presentationImage.setClickable(false);
-				} else {
+				} else if(isSpeaker || KP.isChairman) {
 					linearLayout.setVisibility(RelativeLayout.VISIBLE);
 					microphoneBtn.setVisibility(RelativeLayout.VISIBLE);
 					presentationImage.setClickable(true);

@@ -16,7 +16,6 @@ import 	android.content.Context;
 
 import 	java.lang.ClassCastException;
 
-// TODO: Auto-generated Javadoc
 /**
  * The Class KP.
  */
@@ -42,6 +41,7 @@ public class KP extends Activity
 	
 	static boolean isChairman;
 	static boolean isSpectator;
+	static boolean isRegistered;
 	
 	/** The timeslot list. */
 	ArrayList<String> timeslotList;
@@ -115,6 +115,8 @@ public class KP extends Activity
 	public static native int endPresentation();
 	public static native int getCurrentTimeslotIndex();
 	public static native boolean checkSpeakerState();
+	public static native String getMicServiceIP();
+	public static native String getMicServicePort();
 	
 	static {
 		System.loadLibrary("sslog");
@@ -178,6 +180,7 @@ public class KP extends Activity
         
         isChairman = false;
         isSpectator = false;
+        isRegistered = false;
 	}
 	
 	
@@ -204,39 +207,48 @@ public class KP extends Activity
 		switch(view.getId()) {
 			case R.id.connectBtn:
 				
-				/* If already connected */
 				if(connectionState != 1) {
-					
-					// 10.0.2.2 - local; 
-					// 172.21.0.181 - it-guest
-					// 192.168.112.109 - smart room SIB
+
 					if(connectSmartSpace("X", ip, 10010) != 0) {
 						Toast.makeText(this, "Connection failed", Toast.LENGTH_SHORT).show();
 						return;
 					}
+					
+					connectionState = 1;
 					Log.i("Connection", "DONE");
 					
 					if(initSubscription() != 0)
 						Log.e("Java KP", "Init subscription failed");
 					Log.i("InitSbcr", "DONE");
+				}
 
+				if(!isRegistered) {
 					if(!chBoxAnonim.isChecked()) {
-						if(userRegistration(name, password) == 0) {
+						int ret_value = userRegistration(name, password);
+						
+						if(ret_value == 0) {
 							Log.i("Java KP", "Registration successful");
-							connectionState = 1;
-							if(name.equals("vdovenko") && password.equals("vdovenko"))
+
+							if(password.equals("chairman"))
 								isChairman = true;
+							isRegistered = true;
+						
+						} else if(ret_value == 1) {
+							Toast.makeText(this, "Such login is already exists", Toast.LENGTH_SHORT).show();
+							return;
+							
 						} else {
-							Toast.makeText(this, "Registration failed", Toast.LENGTH_SHORT).show();
+							Toast.makeText(this, "Registration failed due to connection problems", 
+									Toast.LENGTH_SHORT).show();
 							return;
 						}
+						
 					} else
 						isSpectator = true;
 					
 					Log.i("Registration", "DONE");
 					
-				} else
-					Toast.makeText(this, "You are already connected", Toast.LENGTH_SHORT).show();
+				}
 
 				try {
 				    Thread.sleep(400);
@@ -247,15 +259,6 @@ public class KP extends Activity
 				loadAgenda();
 				break;
 		}
-	}
-	
-	@Override
-	public boolean onKeyDown(int keyCode, KeyEvent event)  {
-	    if (keyCode == KeyEvent.KEYCODE_BACK) {
-	    	KP.disconnectSmartSpace();
-	    	connectionState = 0;
-	    }
-	    return super.onKeyDown(keyCode, event);
 	}
 	
 	public void loadAgenda() {

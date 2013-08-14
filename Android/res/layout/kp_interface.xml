@@ -39,7 +39,7 @@
         android:layout_marginLeft="15dp"
         android:layout_marginTop="40dp"
         android:layout_below="@+id/textIP"
-        android:text="@string/participantName"
+        android:text="@string/participantLogin"
         android:textSize="20sp" />
 
     <EditText
