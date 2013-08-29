@@ -8,10 +8,14 @@
 package com.example.srclient;
 
 public final class R {
+    public static final class array {
+        public static final int timeoutEntries=0x7f050000;
+        public static final int timeoutValues=0x7f050001;
+    }
     public static final class attr {
     }
     public static final class color {
-        public static final int gray=0x7f040000;
+        public static final int gray=0x7f060000;
     }
     public static final class dimen {
         /**  Default screen margins, per the Android Design guidelines. 
@@ -20,46 +24,52 @@ public final class R {
          screen margins) for sw720dp devices (e.g. 10" tablets) in landscape here.
     
          */
-        public static final int activity_horizontal_margin=0x7f050000;
-        public static final int activity_vertical_margin=0x7f050001;
+        public static final int activity_horizontal_margin=0x7f070000;
+        public static final int activity_vertical_margin=0x7f070001;
     }
     public static final class drawable {
         public static final int ic_launcher=0x7f020000;
         public static final int inactive_mic=0x7f020001;
         public static final int left_arrow=0x7f020002;
-        public static final int pause=0x7f020003;
-        public static final int pause_128=0x7f020004;
-        public static final int pres_example=0x7f020005;
-        public static final int refresh=0x7f020006;
+        public static final int left_arrow_pressed=0x7f020003;
+        public static final int pres_example=0x7f020004;
+        public static final int refresh=0x7f020005;
+        public static final int refresh_pressed=0x7f020006;
         public static final int right_arrow=0x7f020007;
-        public static final int start_mic=0x7f020008;
-        public static final int stop=0x7f020009;
+        public static final int right_arrow_pressed=0x7f020008;
+        public static final int start_mic=0x7f020009;
         public static final int user=0x7f02000a;
     }
     public static final class id {
-        public static final int action_settings=0x7f090016;
-        public static final int avatar=0x7f090000;
-        public static final int btnBack=0x7f090011;
-        public static final int btnForward=0x7f090013;
-        public static final int btnStop=0x7f090012;
-        public static final int checkBoxAnonim=0x7f09000b;
-        public static final int connectBtn=0x7f09000c;
-        public static final int duration=0x7f090004;
-        public static final int editIP=0x7f090006;
-        public static final int editName=0x7f090009;
-        public static final int editPassword=0x7f09000a;
-        public static final int mic=0x7f09000e;
-        public static final int presImage=0x7f09000d;
-        public static final int presMenu=0x7f090010;
-        public static final int presentationTitle=0x7f090003;
-        public static final int refresh=0x7f09000f;
-        public static final int service_descr=0x7f090015;
-        public static final int service_name=0x7f090014;
-        public static final int speakerName=0x7f090002;
-        public static final int textIP=0x7f090005;
-        public static final int textName=0x7f090008;
-        public static final int textPassword=0x7f090007;
-        public static final int titleAndSpeakerName=0x7f090001;
+        public static final int action_settings=0x7f0b001b;
+        public static final int agenda_layout=0x7f0b0000;
+        public static final int avatar=0x7f0b0001;
+        public static final int btnBack=0x7f0b0013;
+        public static final int btnForward=0x7f0b0014;
+        public static final int conferenceEnd=0x7f0b001a;
+        public static final int conferenceStart=0x7f0b0019;
+        public static final int connectBtn=0x7f0b000b;
+        public static final int editIP=0x7f0b0006;
+        public static final int editName=0x7f0b0009;
+        public static final int editPassword=0x7f0b000a;
+        public static final int endPresentation=0x7f0b001c;
+        public static final int mic=0x7f0b0010;
+        public static final int presImage=0x7f0b000c;
+        public static final int presMenu=0x7f0b0012;
+        public static final int presNumbers=0x7f0b000d;
+        public static final int presSpeaker=0x7f0b000f;
+        public static final int presentationTitle=0x7f0b0004;
+        public static final int refresh=0x7f0b0011;
+        public static final int service_descr=0x7f0b0016;
+        public static final int service_name=0x7f0b0015;
+        public static final int services=0x7f0b0017;
+        public static final int settings=0x7f0b0018;
+        public static final int slideNumber=0x7f0b000e;
+        public static final int speakerName=0x7f0b0003;
+        public static final int textIP=0x7f0b0005;
+        public static final int textName=0x7f0b0008;
+        public static final int textPassword=0x7f0b0007;
+        public static final int titleAndSpeakerName=0x7f0b0002;
     }
     public static final class layout {
         public static final int agenda_interface=0x7f030000;
@@ -68,33 +78,39 @@ public final class R {
         public static final int services_interface=0x7f030003;
     }
     public static final class menu {
-        public static final int main=0x7f080000;
+        public static final int agenda_menu=0x7f0a0000;
+        public static final int main=0x7f0a0001;
+        public static final int projector_menu=0x7f0a0002;
     }
     public static final class string {
-        public static final int action_settings=0x7f060001;
-        public static final int agenda=0x7f06000d;
-        public static final int agenda_descr=0x7f06000e;
-        public static final int anonim=0x7f060013;
-        public static final int app_name=0x7f060000;
-        public static final int avail_services=0x7f060012;
-        public static final int connectBtn=0x7f060008;
-        public static final int endConference=0x7f060015;
-        public static final int exitClientQuestion=0x7f060017;
-        public static final int exitClientTitle=0x7f060016;
-        public static final int menu_endPresentation=0x7f06000c;
-        public static final int menu_refresh=0x7f06000b;
-        public static final int menu_services=0x7f060009;
-        public static final int menu_settings=0x7f06000a;
-        public static final int mic_service=0x7f060010;
-        public static final int participantEmail=0x7f060005;
-        public static final int participantLogin=0x7f060004;
-        public static final int participantPassword=0x7f060007;
-        public static final int participantPhone=0x7f060006;
-        public static final int projector=0x7f06000f;
-        public static final int projector_descr=0x7f060011;
-        public static final int sr_client=0x7f060002;
-        public static final int ssIP=0x7f060003;
-        public static final int startConference=0x7f060014;
+        public static final int action_settings=0x7f080001;
+        public static final int agenda=0x7f08000d;
+        public static final int agenda_descr=0x7f08000e;
+        public static final int anonim=0x7f080013;
+        public static final int app_name=0x7f080000;
+        public static final int avail_services=0x7f080012;
+        public static final int connectBtn=0x7f080008;
+        public static final int endConference=0x7f080015;
+        public static final int exitClientQuestion=0x7f080017;
+        public static final int exitClientTitle=0x7f080016;
+        public static final int menu_endPresentation=0x7f08000c;
+        public static final int menu_refresh=0x7f08000b;
+        public static final int menu_services=0x7f080009;
+        public static final int menu_settings=0x7f08000a;
+        public static final int mic_service=0x7f080010;
+        public static final int participantEmail=0x7f080005;
+        public static final int participantLogin=0x7f080004;
+        public static final int participantPassword=0x7f080007;
+        public static final int participantPhone=0x7f080006;
+        public static final int projector=0x7f08000f;
+        public static final int projector_descr=0x7f080011;
+        public static final int screenTimeoutDialog=0x7f080019;
+        public static final int screenTimeoutTitle=0x7f080018;
+        public static final int showSpeakerSummary=0x7f08001b;
+        public static final int showSpeakerTitle=0x7f08001a;
+        public static final int sr_client=0x7f080002;
+        public static final int ssIP=0x7f080003;
+        public static final int startConference=0x7f080014;
     }
     public static final class style {
         /** 
@@ -118,10 +134,13 @@ public final class R {
     
  API 14 theme customizations can go here. 
          */
-        public static final int AppBaseTheme=0x7f070000;
+        public static final int AppBaseTheme=0x7f090000;
         /**  Application theme. 
  All customizations that are NOT specific to a particular API-level can go here. 
          */
-        public static final int AppTheme=0x7f070001;
+        public static final int AppTheme=0x7f090001;
+    }
+    public static final class xml {
+        public static final int settings=0x7f040000;
     }
 }

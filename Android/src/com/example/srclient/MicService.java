@@ -10,7 +10,10 @@ import android.util.Log;
 import android.widget.Toast;
 
 import java.io.BufferedOutputStream;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.nio.ByteBuffer;
 import java.lang.Thread;
 import java.net.InetSocketAddress;
@@ -22,13 +25,15 @@ import java.lang.IllegalArgumentException;
 
 public class MicService extends Service {
 	
-	private static Socket socket = null;
-	private static BufferedOutputStream bufOutStream = null;
+	private static DatagramSocket socket;
+	private static String ip;
+	private static String port;
+	DatagramPacket packet;
 	private AudioRecord mInputData;
-	private final static int mSampleRate = 44100;
+	private final int mSampleRate = 44100;
 	private int mMinBufferSize;
 	private ByteBuffer mInBuffer;
-	private boolean mActiveMic = false;
+	private static boolean mActiveMic = false;
 
 	@Override
 	public IBinder onBind(Intent intent) {
@@ -36,17 +41,12 @@ public class MicService extends Service {
 	}
 	
 	@Override
-	public void onCreate() {
-		mMinBufferSize = AudioRecord.getMinBufferSize(mSampleRate, AudioFormat.CHANNEL_CONFIGURATION_STEREO, 
-				AudioFormat.ENCODING_PCM_16BIT);
-		mInputData = new AudioRecord(AudioSource.MIC, mSampleRate, 
-				AudioFormat.CHANNEL_CONFIGURATION_STEREO, AudioFormat.ENCODING_PCM_16BIT, mMinBufferSize);
-	}
-	
-	@Override
 	public void onStart(Intent intent, int startId) {
 		
-		if(initConnection() != 0) {
+		ip = KP.getMicServiceIP();
+		port = KP.getMicServicePort();
+		
+		if((ip == null) || (port == null)) {
 			Toast.makeText(this, "Mic service is not available", Toast.LENGTH_SHORT).show();
 			
 			Intent recvIntent = new Intent(Projector.BROADCAST_STATUS_SERVICE);
@@ -54,6 +54,18 @@ public class MicService extends Service {
 			sendBroadcast(recvIntent);
 			
 			stopSelf();
+		}
+		
+		mMinBufferSize = AudioRecord.getMinBufferSize(mSampleRate, AudioFormat.CHANNEL_IN_STEREO, 
+				AudioFormat.ENCODING_PCM_16BIT);
+			
+		mInputData = new AudioRecord(AudioSource.MIC, mSampleRate, 
+				AudioFormat.CHANNEL_IN_STEREO, AudioFormat.ENCODING_PCM_16BIT, mMinBufferSize);
+		
+		try {
+			socket = new DatagramSocket();
+		} catch (SocketException e) {
+			e.printStackTrace();
 		}
 		
 		if(mInputData.getState() == AudioRecord.STATE_INITIALIZED) {
@@ -64,6 +76,28 @@ public class MicService extends Service {
 				public void run() {
 					int bytesRead;
 					
+					// Send to server minimal buffer size value
+					try {
+						String str = String.valueOf(mMinBufferSize);
+						byte bufSize[] = str.getBytes();
+						
+						DatagramSocket socketBuffer = new DatagramSocket();
+						packet = new DatagramPacket(bufSize, bufSize.length,
+								new InetSocketAddress(ip, 4445));
+						
+						socketBuffer.send(packet);
+						socketBuffer.close();
+						
+						sleep(400);
+					} catch (SocketException e) {
+						e.printStackTrace();
+					} catch (IOException e1) {
+						e1.printStackTrace();
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					
+					// Start recording
 					try {
 						mInputData.startRecording();
 					} catch(IllegalStateException e) {
@@ -80,21 +114,19 @@ public class MicService extends Service {
 						bytesRead = mInputData.read(mInBuffer, mMinBufferSize);
 						if(bytesRead != AudioRecord.ERROR_INVALID_OPERATION &&
 								bytesRead != AudioRecord.ERROR_BAD_VALUE) {
-							byte audioData[] = new byte[mMinBufferSize];
+							
+							byte audioData[] = new byte[bytesRead];
+							
 							mInBuffer.get(audioData);
 							mInBuffer.rewind();
+							
 							try {
-								bufOutStream.write(audioData, 0, bytesRead);
+								packet = new DatagramPacket(audioData, audioData.length,
+										new InetSocketAddress(ip, Integer.parseInt(port)));
+								socket.send(packet);
+								
 							} catch(IOException e) {
 								e.printStackTrace();
-								stopRecording();
-								stopSelf();
-								
-								Intent recvIntent = new Intent(Projector.BROADCAST_STATUS_SERVICE);
-								recvIntent.putExtra(Projector.SERVICE_STATUS, false);
-								sendBroadcast(recvIntent);
-								
-								return;
 							} catch(NullPointerException e) {
 								e.printStackTrace();
 							} catch(ArrayIndexOutOfBoundsException e) {
@@ -116,75 +148,15 @@ public class MicService extends Service {
 	@Override
 	public void onDestroy() {
 		mActiveMic = false;
-		
-		try {
-			Thread.sleep(300);
-			
-			if(bufOutStream != null)
-				bufOutStream.close();
-			
-			if(socket.isConnected())
-				socket.close();
-		} catch(IllegalStateException e) {
-			e.printStackTrace();
-		} catch(IOException e) {
-			e.printStackTrace();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
 	}
 	
 	public void stopRecording() {
 		try {
 			mInputData.stop();
 			mInputData.release();
+			socket.close();
 		} catch(IllegalStateException e) {
 			e.printStackTrace();
 		}
-	}
-	
-	public int initConnection() {
-
-		socket = new Socket();
-		Thread t = new Thread() {
-			@Override
-			public void run() {
-				try {
-					String ip = KP.getMicServiceIP();
-					String port = KP.getMicServicePort();
-
-					if((ip == null) || (port == null)) {
-						return;
-					}
-					
-					if(!socket.isConnected())
-						socket.connect(new InetSocketAddress(ip, Integer.parseInt(port)));
-				} catch(UnknownHostException e) {
-					e.printStackTrace();
-				} catch(IOException e) {
-					e.printStackTrace();
-					Log.e("MicSR", "socket is already connected!");
-				} catch (IllegalArgumentException e) {
-					e.printStackTrace();
-				}
-			}
-		};
-		
-		t.start();
-		
-		try {
-			t.join();
-			
-			if(!socket.isConnected())
-				return -1;
-			
-			bufOutStream = new BufferedOutputStream(socket.getOutputStream());
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		} catch(IOException e) {
-			e.printStackTrace();
-		}
-		
-		return 0;
 	}
 }

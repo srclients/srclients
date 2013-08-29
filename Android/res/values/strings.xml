@@ -25,5 +25,9 @@
     <string name="endConference">End conference</string>
     <string name="exitClientTitle">Exit client</string>
     <string name="exitClientQuestion">Do you really want to quit from client?</string>
+    <string name="screenTimeoutTitle">Timeout of screen</string>
+    <string name="screenTimeoutDialog">Locks the screen after certain time</string>
+    <string name="showSpeakerTitle">Show speaker name</string>
+    <string name="showSpeakerSummary">Display name in Projector service</string>
 
 </resources>

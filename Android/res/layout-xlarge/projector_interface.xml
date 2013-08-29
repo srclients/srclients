@@ -16,19 +16,18 @@
         android:id="@+id/presNumbers"
         android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"
-        android:layout_marginTop="4sp"
         android:layout_width="wrap_content"
-        android:layout_height="25sp"
+        android:layout_height="55dp"
         android:background="@color/gray">
         
         <TextView
             android:id="@+id/slideNumber"
             android:layout_width="wrap_content"
 	     android:layout_height="wrap_content"
-	     android:paddingLeft="5sp"
-	     android:paddingRight="5sp"
 	     android:layout_centerInParent="true"
-            android:textSize="16sp"
+	     android:paddingLeft="10sp"
+	     android:paddingRight="10sp"
+            android:textSize="25sp"
             android:text="1/17"/>        
         
     </RelativeLayout>
@@ -38,19 +37,18 @@
         android:layout_alignParentTop="true"
 	 android:layout_toRightOf="@+id/presNumbers"
         android:layout_width="wrap_content"
-        android:layout_marginLeft="7sp"
-        android:layout_marginTop="4sp"
-        android:layout_height="25sp"
+        android:layout_marginLeft="10sp"
+        android:layout_height="55dp"
         android:background="@color/gray">
     
         <TextView
             android:id="@+id/speakerName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:paddingLeft="5sp"
-            android:paddingRight="5sp"
+            android:paddingLeft="10sp"
+            android:paddingRight="10sp"
 	     android:layout_centerInParent="true"
-            android:textSize="16sp"
+            android:textSize="25sp"
             android:text="Speaker Name speaking"/>
         
     </RelativeLayout>

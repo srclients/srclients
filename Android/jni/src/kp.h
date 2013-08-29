@@ -40,6 +40,7 @@ void agendaNotificationHandler(subscription_t *);
 individual_t * createProfile(char *, char *);
 individual_t* createPerson();
 void logout();
+int calculateTimeslotIndex(prop_val_t *);
 
 
 #endif

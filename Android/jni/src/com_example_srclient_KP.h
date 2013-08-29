@@ -142,6 +142,15 @@ JNIEXPORT jstring JNICALL Java_com_example_srclient_KP_getMicServicePort
   (JNIEnv *, jclass);
 
 
+/*
+ * Class:     com_example_srclient_KP
+ * Method:    getSpeakerName
+ * Signature: ()I
+ */
+JNIEXPORT jstring JNICALL Java_com_example_srclient_KP_getSpeakerName
+  (JNIEnv *, jclass);
+
+
 #ifdef __cplusplus
 }
 #endif

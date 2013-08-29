@@ -19,9 +19,6 @@ public class Timeslot extends HashMap<String, Object> {
 	/** The Constant NAME. */
 	public static final String NAME = "name";
 	
-	/** The Constant DURATION. */
-	public static final String DURATION = "duration";
-	
 	/** The Constant TITLE. */
 	public static final String TITLE = "title";
 	
@@ -45,10 +42,9 @@ public class Timeslot extends HashMap<String, Object> {
 	 * @param title the title
 	 * @param img the img
 	 */
-	public Timeslot(String name, String duration, String title, String img) {
+	public Timeslot(String name, String title, String img) {
 		super();
 		super.put(NAME, name);
-		super.put(DURATION, duration);
 		super.put(TITLE, title);
 		super.put(IMG, img);
 	}
@@ -61,10 +57,9 @@ public class Timeslot extends HashMap<String, Object> {
 	 * @param title the title
 	 * @param img the img
 	 */
-	public Timeslot(String name, String duration, String title, Drawable img) {
+	public Timeslot(String name, String title, Drawable img) {
 		super();
 		super.put(NAME, name);
-		super.put(DURATION, duration);
 		super.put(TITLE, title);
 		super.put(IMG, img);
 	}
@@ -77,7 +72,6 @@ public class Timeslot extends HashMap<String, Object> {
 	public Timeslot(Timeslot item) {
 		super();
 		super.put(NAME, item.get(item.NAME));
-		super.put(DURATION, item.get(item.DURATION));
 		super.put(TITLE, item.get(item.TITLE));
 		super.put(IMG, item.get(item.IMG));
 	}

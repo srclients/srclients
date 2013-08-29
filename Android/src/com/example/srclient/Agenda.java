@@ -11,55 +11,70 @@ import java.util.ArrayList;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.ViewGroup;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.app.AlertDialog.Builder;
 
 import java.io.InputStream;
 import java.net.URL;
 
-import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import java.lang.Thread;
-import android.content.Context;
 
 
-// TODO: Auto-generated Javadoc
-/**
- * The Class Agenda.
- */
 public class Agenda extends ListActivity {
-
-	private static final int IDM_SERVICES = 100;	
-	private static final int IDM_SETTINGS = 101;
-	private static final int IDM_STARTCONFERENCE = 102;
-	private static final int IDM_ENDCONFERENCE = 103;
 	
 	public static int agendaCreated = 0;
 	public static boolean conferenceStarted = false;
 	public static boolean conferenceEnded = false;
+	public static int currentTimeslotIndex = -1;
 	
 	private static ArrayList<Timeslot> list;
 	private static boolean updated = false;
+	
 	
 	private ListAdapter adapter;
 	
 	Drawable imgDefault;
 	String absentImg = "absentImage";
-	//int connectionState = 0;
+	int connectionState = 0;
 	
-	/**
-	 * Instantiates a new agenda.
-	 *
-	 * @throws InterruptedException the interrupted exception
-	 */
+	
 	public Agenda() { }
 	
 	/* (non-Javadoc)
 	 * @see android.app.Activity#onCreate(android.os.Bundle)
 	 */
+	
+	@Override
+	protected void onPause() {
+		super.onPause();
+		
+		agendaCreated = 0;
+	}
+	
+	@Override
+	protected void onStart() {
+		super.onStart();
+		
+		int value = KP.getCurrentTimeslotIndex(); 
+		
+		if(value != currentTimeslotIndex) {
+			currentTimeslotIndex = value;
+			updateAgenda();
+		}
+		
+		agendaCreated = 1;
+	}
+	
+	@Override
+	protected void onResume() {
+		super.onResume();
+		
+		setSelection(currentTimeslotIndex - 1);
+	}
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -68,21 +83,27 @@ public class Agenda extends ListActivity {
 		imgDefault = this.getResources().getDrawable(R.drawable.user);
 		
 		if(savedInstanceState == null || updated) {
-			updated = false;
 			prepareAgendaData();
+			
+			// Transition to Projector if speaker
+			if(KP.checkSpeakerState()) {
+				Intent intent = new Intent();
+				intent.setClass(this, Projector.class);
+				startActivity(intent);
+			}
+			
+			updated = false;
 		}
+		
+		setCurrentTimeslot(KP.getCurrentTimeslotIndex());
         
-		adapter = new SimpleAdapter(
+		adapter = new AgendaAdapter(
         		this, list, R.layout.agenda_interface, 
-        		new String[] {Timeslot.NAME, Timeslot.TITLE, 
-        				Timeslot.DURATION, Timeslot.IMG},
-        		new int[] {R.id.speakerName, R.id.presentationTitle, 
-        				R.id.duration, R.id.avatar});
+        		new String[] {Timeslot.NAME, Timeslot.TITLE, Timeslot.IMG},
+        		new int[] {R.id.speakerName, R.id.presentationTitle, R.id.avatar});
 
 		((SimpleAdapter) adapter).setViewBinder(new AgendaViewBinder());
 		setListAdapter(adapter);
-		
-		//setCurrentTimeslot(KP.getCurrentTimeslotIndex());
 		
 		agendaCreated = 1;
 	}
@@ -97,27 +118,23 @@ public class Agenda extends ListActivity {
 	 * @param img the img
 	 * @throws InterruptedException 
 	 */
-	public void addTimeslotItemToList(final String name, final String duration, 
-			 final String title, final String img) throws InterruptedException {
+	public void addTimeslotItemToList(final String name, final String title, 
+			final String img) throws InterruptedException {
 		
 		if(!img.equals(absentImg)) {
 			
 			Thread t = new Thread() {
 					@Override
 					public void run() {
-						//synchronized(list) {
 							Drawable imgAvatar = loadImage(img);
-							list.add(new Timeslot(name, duration, title, imgAvatar));
-						//}
+							list.add(new Timeslot(name, title, imgAvatar));
 					};
 			};
 			t.start();
 			t.join();
 			
 		} else
-			//synchronized(list) {
-				list.add(new Timeslot(name, duration, title, imgDefault));
-			//}
+				list.add(new Timeslot(name, title, imgDefault));
 	}
 	
 	
@@ -154,26 +171,30 @@ public class Agenda extends ListActivity {
 	 */
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-		menu.add(Menu.NONE, IDM_SERVICES, Menu.NONE, R.string.menu_services);
-		//menu.add(Menu.NONE, IDM_SETTINGS, Menu.NONE, R.string.menu_settings);
 		
-		if(KP.isChairman) {
-			menu.add(Menu.NONE, IDM_STARTCONFERENCE, Menu.NONE, R.string.startConference);
-			menu.add(Menu.NONE, IDM_ENDCONFERENCE, Menu.NONE, R.string.endConference);
+		MenuInflater inflater = getMenuInflater();
+		inflater.inflate(R.menu.agenda_menu, menu);
+		
+		if(!KP.isChairman) {
+			menu.findItem(R.id.conferenceStart).setVisible(false);
+			menu.findItem(R.id.conferenceEnd).setVisible(false);
+
 		}
-		menu.findItem(IDM_ENDCONFERENCE).setEnabled(false);
-		
-		if(conferenceStarted) {
-			menu.findItem(IDM_STARTCONFERENCE).setEnabled(false);
-			menu.findItem(IDM_ENDCONFERENCE).setEnabled(true);
-		
-		} else if(conferenceEnded) {
-			menu.findItem(IDM_STARTCONFERENCE).setEnabled(true);
-			menu.findItem(IDM_ENDCONFERENCE).setEnabled(false);
-		}
-			
 			
 		return super.onCreateOptionsMenu(menu);
+	}
+	
+	@Override
+	public boolean onPrepareOptionsMenu(Menu menu) {
+		
+		if(conferenceStarted) {
+			menu.findItem(R.id.conferenceStart).setEnabled(false);
+			menu.findItem(R.id.conferenceEnd).setEnabled(true);
+		
+		} else if(conferenceEnded)
+			menu.findItem(R.id.conferenceStart).setEnabled(true);
+		
+		return true;
 	}
 	
 	/* (non-Javadoc)
@@ -184,26 +205,30 @@ public class Agenda extends ListActivity {
 		
 		switch(item.getItemId()) {
 		
-			case IDM_SERVICES:
-				Intent intent = new Intent();
-				intent.setClass(this, ServicesMenu.class);
-				startActivity(intent);
+			case R.id.services:
+				Intent intentServices = new Intent();
+				intentServices.setClass(this, ServicesMenu.class);
+				startActivity(intentServices);
 				break;
 			
-			case IDM_SETTINGS:
+			case R.id.settings:
+				Intent intentSettings = new Intent();
+				intentSettings.setClass(this, SettingsMenu.class);
+				startActivity(intentSettings);
 				break;
 				
-			case IDM_STARTCONFERENCE:
+			case R.id.conferenceStart:
+				item.setEnabled(false);
 				if(startConference() != 0)
 					Toast.makeText(this, "Start conference failed", Toast.LENGTH_SHORT).show();
 				conferenceStarted = true;
-				item.setEnabled(false);
 				break;
 				
-			case IDM_ENDCONFERENCE:
+			case R.id.conferenceEnd:
 				if(endConference() != 0)
 					Toast.makeText(this, "End conference failed", Toast.LENGTH_SHORT).show();
 				conferenceEnded = true;
+				conferenceStarted = false;
 				item.setEnabled(false);
 				break;
 		}
@@ -236,15 +261,15 @@ public class Agenda extends ListActivity {
 	public int prepareAgendaData() {
 		list = new ArrayList<Timeslot>();
 		
-		//if(connectionState == 0) {
+		if(connectionState == 0) {
 			if(KP.loadTimeslotList(this) == -1) {
 				Log.i("Agenda GUI", "Fill agenda fail");
 				finish();
 				return -1;
 			}
-		//}
+		}
 		
-		//connectionState = 1;
+		connectionState = 1;
 		
 		return 0;
 	}
@@ -280,15 +305,13 @@ public class Agenda extends ListActivity {
 		return super.onKeyDown(keyCode, event);
 	}
 	
-	/*
+	
 	public void setCurrentTimeslot(int index) {
-		long id = adapter.getItemId(index);
-		View item = (View) findViewById ((int)id);
-		Log.i("currentTimeslot", String.valueOf(index));
+		currentTimeslotIndex = index;
+	}
+	
+	public View getView(int position, View convertView, ViewGroup parent) {
 		
-		if(item != null)
-			item.setBackgroundColor(Color.BLUE);
-		else
-			Log.e("setCurTimeslot", "item not found");
-	}*/
+		return convertView;
+	}
 }

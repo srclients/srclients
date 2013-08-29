@@ -6,9 +6,12 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.util.Log;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.RelativeLayout;
 import android.graphics.drawable.Drawable;
@@ -16,7 +19,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.content.Context;
-import java.net.URLConnection;
+import java.net.HttpURLConnection;
 import android.content.BroadcastReceiver;
 
 import java.io.BufferedInputStream;
@@ -28,11 +31,7 @@ import java.net.URL;
  * The Class Projector.
  */
 public class Projector extends Activity 
-	implements View.OnClickListener {
-	
-	private static final int IDM_SERVICES = 100;
-	private static final int IDM_SETTINGS = 101;
-	private static final int IDM_END_PRESENTATION = 102;
+	implements View.OnClickListener, View.OnTouchListener {
 	
 	public static final String BROADCAST_STATUS_SERVICE = "com.example.srclient.stopMicService";
 	public static final String SERVICE_STATUS = "status";
@@ -42,21 +41,24 @@ public class Projector extends Activity
 	/** The linear layout. */
 	RelativeLayout linearLayout;
 	
+	RelativeLayout speakerNameLayout;
+	
 	/** The left arrow btn. */
 	ImageView leftArrowBtn;
 	
 	/** The right arrow btn. */
 	ImageView rightArrowBtn;
 	
-	/** The pause btn. */
-	ImageView stopBtn;
-	
 	/** The presentation image. */
 	ImageView presentationImage;
 	
 	ImageView microphoneBtn;
 	
-	ImageView resfreshBtn;
+	ImageView refreshBtn;
+	
+	TextView textNumAndCount;
+	
+	TextView speakerNameView;
 	
 	/** The slide image drawable. */
 	Drawable slideImageDrawable;
@@ -66,6 +68,8 @@ public class Projector extends Activity
 	
 	/** The slide image link. */
 	String slideImageLink = "";
+	
+	String speakerName;
 	
 	/** The slide number. */
 	int slideNumber;
@@ -81,7 +85,7 @@ public class Projector extends Activity
 	
 	Context context;
 	
-	public boolean isSpeaker = false;
+	public static boolean isSpeaker = false;
 	
 	public static boolean micIsActive = false;
 	
@@ -107,6 +111,17 @@ public class Projector extends Activity
 		micIsActive = prefs.getBoolean("micIsActive", false);
 		if(micIsActive)
 			microphoneBtn.setImageResource(R.drawable.start_mic);
+		
+		boolean showSpeakerName = prefs.getBoolean(SettingsMenu.SHOW_SPEAKER_NAME, true);
+		
+		speakerNameLayout = (RelativeLayout) findViewById (R.id.presSpeaker);
+		
+		if(showSpeakerName)
+			speakerNameLayout.setVisibility(RelativeLayout.VISIBLE);
+		else
+			speakerNameLayout.setVisibility(RelativeLayout.INVISIBLE);
+		
+		projectorCreated = 1;
 	}
 	
 	@Override
@@ -128,52 +143,43 @@ public class Projector extends Activity
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.projector_interface);
 		
-		slideImageLink = slideImageLink.replace("127.0.0.1", KP.ip);
-		
-		Thread thread = new Thread() {
-			@Override
-			public void run() {
-				slideImageDrawable = loadImage(slideImageLink);				
-			};
-		};
-		
-		thread.start();
-		try {
-			thread.join();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-		
 		linearLayout = (RelativeLayout) findViewById (R.id.presMenu);
 		
 		leftArrowBtn = (ImageView) findViewById (R.id.btnBack);
-		leftArrowBtn.setOnClickListener(this);
+		leftArrowBtn.setOnTouchListener(this);
 		rightArrowBtn = (ImageView) findViewById (R.id.btnForward);
-		rightArrowBtn.setOnClickListener(this);
-		stopBtn = (ImageView) findViewById (R.id.btnStop);
-		stopBtn.setOnClickListener(this);
+		rightArrowBtn.setOnTouchListener(this);
 		
 		microphoneBtn = (ImageView) findViewById (R.id.mic);
 		microphoneBtn.setOnClickListener(this);
 		
-		resfreshBtn = (ImageView) findViewById (R.id.refresh);
-		resfreshBtn.setOnClickListener(this);
+		refreshBtn = (ImageView) findViewById (R.id.refresh);
+		refreshBtn.setOnTouchListener(this);
 		
 		presentationImage = (ImageView) findViewById (R.id.presImage);
-		presentationImage.setImageDrawable(slideImageDrawable);
 		presentationImage.setOnClickListener(this);
 		
-		if(!KP.isSpectator)
-			isSpeaker = KP.checkSpeakerState();
+		textNumAndCount = (TextView) findViewById (R.id.slideNumber);
 		
-		if(!isSpeaker) {
-			linearLayout.setVisibility(RelativeLayout.INVISIBLE);
-			microphoneBtn.setVisibility(RelativeLayout.INVISIBLE);
-			presentationImage.setClickable(false);
-		} else if(isSpeaker || KP.isChairman) {
+		speakerName = KP.getSpeakerName();
+		speakerNameView = (TextView) findViewById (R.id.speakerName);
+		speakerNameView.setText(speakerName + " speaking");
+
+		try {
+			updateProjector();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		
+		if(isSpeaker || KP.isChairman) {
 			linearLayout.setVisibility(RelativeLayout.VISIBLE);
 			microphoneBtn.setVisibility(RelativeLayout.VISIBLE);
 			presentationImage.setClickable(true);
+			
+		} else {
+			linearLayout.setVisibility(RelativeLayout.INVISIBLE);
+			microphoneBtn.setVisibility(RelativeLayout.INVISIBLE);
+			presentationImage.setClickable(false);
 		}
 		
 		// Registering receiver for changing mic picture
@@ -220,19 +226,6 @@ public class Projector extends Activity
 				}
 				break;
 				
-			case R.id.btnForward:
-				if(nextSlide() != 0)
-					Log.e("Projector", "NEXT SLIDE error");
-				break;
-				
-			case R.id.btnBack:
-				previousSlide();
-				break;
-				
-			case R.id.btnStop:
-				endPresentation();
-				break;
-				
 			case R.id.mic:
 				if(!micIsActive) {
 					microphoneBtn.setImageResource(R.drawable.start_mic);
@@ -244,16 +237,50 @@ public class Projector extends Activity
 					micIsActive = false;
 				}
 				break;
-				
-			case R.id.refresh:
-				try {
-					KP.loadPresentation(this);
-					updateProjector();
-				} catch (InterruptedException e) {
-					e.printStackTrace();
+		}
+	}
+	
+	@Override
+	public boolean onTouch(View view, MotionEvent event) {
+		
+		switch(view.getId()) {
+		
+			case R.id.btnForward:
+				if(event.getAction() == MotionEvent.ACTION_DOWN) {
+					rightArrowBtn.setImageResource(R.drawable.right_arrow_pressed);
+				} else if(event.getAction() == MotionEvent.ACTION_UP) {
+					rightArrowBtn.setImageResource(R.drawable.right_arrow);
+					nextSlide();
 				}
 				break;
+				
+			case R.id.btnBack:
+				if(event.getAction() == MotionEvent.ACTION_DOWN) {
+					leftArrowBtn.setImageResource(R.drawable.left_arrow_pressed);
+				} else if(event.getAction() == MotionEvent.ACTION_UP) {
+					leftArrowBtn.setImageResource(R.drawable.left_arrow);
+					previousSlide();
+				}
+				break;
+				
+			case R.id.refresh:
+				if(event.getAction() == MotionEvent.ACTION_DOWN) {
+					refreshBtn.setImageResource(R.drawable.refresh_pressed);
+				
+				} else if(event.getAction() == MotionEvent.ACTION_UP) {
+					refreshBtn.setImageResource(R.drawable.refresh);
+					try {
+						KP.loadPresentation(this);
+						updateProjector();
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+				break;
+		
 		}
+		
+		return true;
 	}
 	
 	/* Loads image by url */
@@ -265,21 +292,22 @@ public class Projector extends Activity
 	 */
 	synchronized public Drawable loadImage(String link) {
 		Drawable imgDrawable = null;
+		HttpURLConnection connection = null;
 
 		try {
 			URL url = new URL(link);
-			URLConnection connection = url.openConnection();
+			connection = (HttpURLConnection) url.openConnection();
 			InputStream in = new BufferedInputStream(connection.getInputStream());
 			imgDrawable = Drawable.createFromStream(in, null);
 			
-			if(imgDrawable == null) {
-				Log.e("Java projector", "imgDrawable = null");
-				return null;
-			}
+			connection.disconnect();
 			
 		} catch (Exception e) {
 			e.printStackTrace();
-		}
+			
+			if(connection != null)
+				connection.disconnect();
+		} 
 		
 		return imgDrawable;
 	}
@@ -289,11 +317,27 @@ public class Projector extends Activity
 	 */
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-		menu.add(Menu.NONE, IDM_SERVICES, Menu.NONE, R.string.menu_services);
-		menu.add(Menu.NONE, IDM_SETTINGS, Menu.NONE, R.string.menu_settings);
-		menu.add(Menu.NONE, IDM_END_PRESENTATION, Menu.NONE, R.string.menu_endPresentation);
+		
+		MenuInflater inflater = getMenuInflater();
+		inflater.inflate(R.menu.projector_menu, menu);
+			
+		if(isSpeaker || KP.isChairman)
+			menu.findItem(R.id.endPresentation).setVisible(true);
+		else
+			menu.findItem(R.id.endPresentation).setVisible(false);
 		
 		return super.onCreateOptionsMenu(menu);
+	}
+	
+	@Override
+	public boolean onPrepareOptionsMenu(Menu menu) {
+		
+		if(isSpeaker || KP.isChairman)
+			menu.findItem(R.id.endPresentation).setVisible(true);
+		else
+			menu.findItem(R.id.endPresentation).setVisible(false);
+		
+		return super.onPrepareOptionsMenu(menu);
 	}
 	
 	/* (non-Javadoc)
@@ -304,16 +348,20 @@ public class Projector extends Activity
 		
 		switch(item.getItemId()) {
 		
-			case IDM_SERVICES:
+			case R.id.services:
 				Intent intent = new Intent();
 				intent.setClass(this, ServicesMenu.class);
 				startActivity(intent);
 				break;
 			
-			case IDM_SETTINGS:
+			case R.id.settings:
+				Intent intentSettings = new Intent();
+				intentSettings.setClass(this, SettingsMenu.class);
+				startActivity(intentSettings);
 				break;
 				
-			case IDM_END_PRESENTATION:
+			case R.id.endPresentation:
+				isSpeaker = false;
 				endPresentation();
 				break;
 		}
@@ -335,8 +383,8 @@ public class Projector extends Activity
 		thread.start();
 		thread.join();
 		
-		if(!KP.isSpectator)
-			isSpeaker = KP.checkSpeakerState();
+		speakerName = KP.getSpeakerName();
+		isSpeaker = KP.checkSpeakerState();
 		
 		if(!isSpeaker && micIsActive) {
 			micIsActive = false;
@@ -346,17 +394,20 @@ public class Projector extends Activity
 		uiHandler = new Handler(Looper.getMainLooper()) {
 			@Override
 			public void handleMessage(Message inMsg) {
+				speakerNameView.setText(speakerName + " speaking");
+				textNumAndCount.setText(String.valueOf(slideNumber) + "/" + 
+						String.valueOf(slideCount));
 				presentationImage.setImageDrawable(slideImageDrawable);
 				presentationImage.invalidate();
 				
-				if(!isSpeaker) {
-					linearLayout.setVisibility(RelativeLayout.INVISIBLE);
-					microphoneBtn.setVisibility(RelativeLayout.INVISIBLE);
-					presentationImage.setClickable(false);
-				} else if(isSpeaker || KP.isChairman) {
+				if(isSpeaker || KP.isChairman) {
 					linearLayout.setVisibility(RelativeLayout.VISIBLE);
 					microphoneBtn.setVisibility(RelativeLayout.VISIBLE);
 					presentationImage.setClickable(true);
+				} else {
+					linearLayout.setVisibility(RelativeLayout.INVISIBLE);
+					microphoneBtn.setVisibility(RelativeLayout.INVISIBLE);
+					presentationImage.setClickable(false);
 				}
 			}
 		};

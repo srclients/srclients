@@ -2,6 +2,7 @@ package com.example.srclient;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.widget.Button;
 import android.widget.Toast;
 import android.util.Log;
@@ -40,7 +41,6 @@ public class KP extends Activity
 	static int connectionState;
 	
 	static boolean isChairman;
-	static boolean isSpectator;
 	static boolean isRegistered;
 	
 	/** The timeslot list. */
@@ -117,16 +117,12 @@ public class KP extends Activity
 	public static native boolean checkSpeakerState();
 	public static native String getMicServiceIP();
 	public static native String getMicServicePort();
+	public static native String getSpeakerName();
 	
 	static {
 		System.loadLibrary("sslog");
 	}
 	
-	
-	/**
-	 * Instantiates a new kp.
-	 */
-	public KP() {}
 	
 	@Override
 	protected void onResume() {
@@ -138,6 +134,12 @@ public class KP extends Activity
 			String username = prefs.getString("username", "vdovenko");
 			String password = prefs.getString("password", "vdovenko");
 			
+			int timeout = prefs.getInt(SettingsMenu.TIMEOUT_SCREEN_PREF, 
+					SettingsMenu.defaultTimeout);
+			
+			android.provider.Settings.System.putInt(getContentResolver(), 
+					Settings.System.SCREEN_OFF_TIMEOUT, timeout);
+			
 			editIP.setText(ip);
 			editName.setText(username);
 	        editPassword.setText(password);
@@ -147,6 +149,9 @@ public class KP extends Activity
 			editName.setText("");
 	        editPassword.setText("");
 		}
+		
+		if(connectionState == 1 && isRegistered)
+			loadAgenda();
 	}
 	
 	@Override
@@ -164,9 +169,20 @@ public class KP extends Activity
 	/* (non-Javadoc)
 	 * @see android.app.Activity#onCreate(android.os.Bundle)
 	 */
+	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
         setContentView(R.layout.kp_interface);
+        
+        SharedPreferences prefs = getSharedPreferences("srclient_conf", Context.MODE_PRIVATE);
+		SharedPreferences.Editor editor = prefs.edit();
+		
+		// Save system timeout screen value
+		int screenTimeout = android.provider.Settings.System.getInt(getContentResolver(), 
+				Settings.System.SCREEN_OFF_TIMEOUT , SettingsMenu.defaultTimeout);
+		
+		editor.putInt(SettingsMenu.SYSTEM_TIMEOUT_SCREEN_PREF, screenTimeout);
+		editor.commit();
         
         connectBtn = (Button) findViewById (R.id.connectBtn);
         connectBtn.setOnClickListener(this);
@@ -175,11 +191,10 @@ public class KP extends Activity
         editPassword = (EditText) findViewById (R.id.editPassword);
         editIP = (EditText) findViewById (R.id.editIP);
         
-        chBoxAnonim = (CheckBox) findViewById (R.id.checkBoxAnonim);
-        chBoxAnonim.setChecked(false);
+        //chBoxAnonim = (CheckBox) findViewById (R.id.checkBoxAnonim);
+        //chBoxAnonim.setChecked(false);
         
         isChairman = false;
-        isSpectator = false;
         isRegistered = false;
 	}
 	
@@ -223,7 +238,7 @@ public class KP extends Activity
 				}
 
 				if(!isRegistered) {
-					if(!chBoxAnonim.isChecked()) {
+					//if(!chBoxAnonim.isChecked()) {
 						int ret_value = userRegistration(name, password);
 						
 						if(ret_value == 0) {
@@ -243,8 +258,8 @@ public class KP extends Activity
 							return;
 						}
 						
-					} else
-						isSpectator = true;
+					//} else
+						//isSpectator = true;
 					
 					Log.i("Registration", "DONE");
 					
@@ -265,5 +280,21 @@ public class KP extends Activity
 		Intent intent = new Intent();
 		intent.setClass(this, Agenda.class);
 		startActivity(intent);
+	}
+	
+	@Override
+	public boolean onKeyDown(int keyCode, KeyEvent event)  {
+		
+		if (keyCode == KeyEvent.KEYCODE_BACK) {
+			SharedPreferences prefs = getSharedPreferences("srclient_conf", Context.MODE_PRIVATE);
+			
+			int timeout = prefs.getInt(SettingsMenu.SYSTEM_TIMEOUT_SCREEN_PREF, 
+					SettingsMenu.defaultTimeout);
+			
+			android.provider.Settings.System.putInt(getContentResolver(), 
+					Settings.System.SCREEN_OFF_TIMEOUT, timeout);
+		}
+		
+		return super.onKeyDown(keyCode, event);
 	}
 }
